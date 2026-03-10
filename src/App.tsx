@@ -3,7 +3,7 @@ import { MarkdownEditor } from './Editor';
 import type { EditorRef } from './Editor';
 import { 
   FileUp, FileDown, 
-  Moon, Sun, Eye, Code, Layers
+  Moon, Sun, Eye, Code, Layers, Settings
 } from 'lucide-react';
 
 const FONT_FAMILIES = [
@@ -16,12 +16,13 @@ const FONT_FAMILIES = [
 const FONT_SIZES = ['14px', '16px', '18px', '20px', '22px'];
 
 export default function App() {
-  const [markdown, setMarkdown] = useState('# Hello Typora Clone\n\nStart typing your markdown here. Formatting happens **live**!\n\n```javascript\nconsole.log("Syntax highlighting included!");\n```');
+  const [markdown, setMarkdown] = useState('# Hello Typora Clone\n\nStart typing your markdown here. Formatting happens **live**!\n\n- [x] Checkboxes supported\n- [ ] Try marking text for the flyover bar\n\n```javascript\nconsole.log("Syntax highlighting included!");\n```');
   const [isSourceMode, setIsSourceMode] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [fontFamily, setFontFamily] = useState(FONT_FAMILIES[0].value);
   const [fontSize, setFontSize] = useState('18px');
   const [showFlyover, setShowFlyover] = useState(true);
+  const [showHelp, setShowHelp] = useState(false);
   
   const editorRef = useRef<EditorRef>(null);
 
@@ -58,9 +59,13 @@ export default function App() {
     <>
       <div className="menu-bar">
         <div className="flex-grow flex items-center gap-4">
-          <button className="menu-item" onClick={toggleSourceMode} title={isSourceMode ? "WYSIWYG" : "Source Markdown"}>
+          <button 
+            className={`menu-item mode-toggle ${isSourceMode ? 'active' : ''}`} 
+            onClick={toggleSourceMode} 
+            title={isSourceMode ? "WYSIWYG" : "Source Markdown"}
+          >
             {isSourceMode ? <Eye size={18} /> : <Code size={18} />}
-            <span>{isSourceMode ? "Visual" : "Source"}</span>
+            <span>{isSourceMode ? "Source" : "Visual"}</span>
           </button>
           
           <div style={{ width: '1px', height: '24px', background: 'var(--border)' }} />
@@ -83,12 +88,17 @@ export default function App() {
 
           <div style={{ width: '1px', height: '24px', background: 'var(--border)' }} />
 
-          <button className="menu-item" onClick={() => setIsDarkMode(!isDarkMode)}>
+          <button className="menu-item" onClick={() => setIsDarkMode(!isDarkMode)} title="Toggle Dark Mode">
             {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
           <button className={`menu-item ${showFlyover ? 'active' : ''}`} onClick={() => setShowFlyover(!showFlyover)} title="Flyover Toolbar">
             <Layers size={18} />
+          </button>
+
+          <button className="menu-item" onClick={() => setShowHelp(true)} title="Markdown Help">
+            <Settings size={18} />
+            <span>Help</span>
           </button>
         </div>
 
@@ -123,6 +133,42 @@ export default function App() {
           />
         )}
       </main>
+
+      {showHelp && (
+        <div className="help-overlay" onClick={() => setShowHelp(false)}>
+          <div className="help-content" onClick={e => e.stopPropagation()}>
+            <button className="help-close" onClick={() => setShowHelp(false)}>✕</button>
+            <h2>Markdown Syntax Help</h2>
+            <div className="help-grid">
+              <div className="help-item">
+                <h3>Text Styling</h3>
+                <p><code>**Bold**</code> → <strong>Bold</strong></p>
+                <p><code>*Italic*</code> → <em>Italic</em></p>
+                <p><code>~~Strike~~</code> → <del>Strike</del></p>
+                <p><code>`Inline Code`</code></p>
+              </div>
+              <div className="help-item">
+                <h3>Headers</h3>
+                <p><code># H1 Header</code></p>
+                <p><code>## H2 Header</code></p>
+                <p><code>### H3 Header</code></p>
+              </div>
+              <div className="help-item">
+                <h3>Lists</h3>
+                <p><code>- Bullet point</code></p>
+                <p><code>1. Numbered item</code></p>
+                <p><code>- [x] Task checkbox</code></p>
+              </div>
+              <div className="help-item">
+                <h3>Blocks</h3>
+                <p><code>&gt; Blockquote</code></p>
+                <p><code>```js \n Code block \n ```</code></p>
+                <p><code>---</code> (Horizontal rule)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .flex { display: flex; }

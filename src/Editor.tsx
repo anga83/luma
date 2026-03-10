@@ -16,7 +16,12 @@ import { callCommand } from '@milkdown/utils';
 import { 
   toggleStrongCommand, 
   toggleEmphasisCommand, 
-  wrapInBlockquoteCommand
+  wrapInBlockquoteCommand,
+  wrapInBulletListCommand,
+  wrapInOrderedListCommand,
+  toggleInlineCodeCommand,
+  createCodeBlockCommand,
+  updateLinkCommand
 } from '@milkdown/preset-commonmark';
 import { toggleStrikethroughCommand } from '@milkdown/preset-gfm';
 
@@ -52,7 +57,7 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           }
         });
 
-        // Setup tooltip provider with actual commands
+        // Setup tooltip provider with expanded commands
         ctx.set(tooltip.key, {
           view: (_view) => {
             const content = document.createElement('div');
@@ -60,9 +65,15 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
             content.innerHTML = `
               <button class="tooltip-button" data-command="strong" title="Bold">B</button>
               <button class="tooltip-button" data-command="emphasis" title="Italic">I</button>
-              <button class="tooltip-button" data-command="strike" title="Strikethrough">S</button>
+              <button class="tooltip-button" data-command="strike" title="Strike">S</button>
+              <button class="tooltip-button" data-command="inline-code" title="Inline Code">{}</button>
               <div class="divider"></div>
+              <button class="tooltip-button" data-command="bullet-list" title="Bullet List">•</button>
+              <button class="tooltip-button" data-command="ordered-list" title="Ordered List">1.</button>
               <button class="tooltip-button" data-command="quote" title="Quote">"</button>
+              <div class="divider"></div>
+              <button class="tooltip-button" data-command="link" title="Link">Link</button>
+              <button class="tooltip-button" data-command="code-block" title="Code Block">Code</button>
             `;
             
             const provider = new TooltipProvider({ content });
@@ -81,7 +92,16 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
                   case 'strong': ctx.get(callCommand(toggleStrongCommand.key, null) as any); break;
                   case 'emphasis': ctx.get(callCommand(toggleEmphasisCommand.key, null) as any); break;
                   case 'strike': ctx.get(callCommand(toggleStrikethroughCommand.key, null) as any); break;
+                  case 'inline-code': ctx.get(callCommand(toggleInlineCodeCommand.key, null) as any); break;
+                  case 'bullet-list': ctx.get(callCommand(wrapInBulletListCommand.key, null) as any); break;
+                  case 'ordered-list': ctx.get(callCommand(wrapInOrderedListCommand.key, null) as any); break;
                   case 'quote': ctx.get(callCommand(wrapInBlockquoteCommand.key, null) as any); break;
+                  case 'code-block': ctx.get(callCommand(createCodeBlockCommand.key, null) as any); break;
+                  case 'link': {
+                    const url = window.prompt('Enter Link URL', 'https://');
+                    if (url) ctx.get(callCommand(updateLinkCommand.key, { href: url }) as any);
+                    break;
+                  }
                 }
               });
             });
@@ -173,6 +193,7 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
         .milkdown pre {
           background: #f6f8fa !important;
           border: 1px solid var(--border) !important;
+          position: relative;
         }
         [data-theme='dark'] .milkdown pre {
           background: #161b22 !important;
@@ -180,6 +201,17 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
         .milkdown pre code {
           background: transparent !important;
           padding: 0 !important;
+        }
+        
+        .milkdown .task-list-item {
+          list-style: none !important;
+          padding-left: 1.5em !important;
+          position: relative;
+        }
+        .milkdown .task-list-item input {
+          position: absolute;
+          left: 0;
+          top: 0.5em;
         }
       `}</style>
     </div>
