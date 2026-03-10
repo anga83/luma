@@ -3,7 +3,7 @@ import { MarkdownEditor } from './Editor';
 import type { EditorRef } from './Editor';
 import { 
   FileUp, FileDown, 
-  Moon, Sun, Eye, Code, Layers, HelpCircle
+  Moon, Sun, Eye, Code, Layers, HelpCircle, Table as TableIcon
 } from 'lucide-react';
 
 const FONT_FAMILIES = [
@@ -15,23 +15,59 @@ const FONT_FAMILIES = [
 
 const FONT_SIZES = ['14px', '16px', '18px', '20px', '22px'];
 
+const DEFAULT_MARKDOWN = `# Willkommen bei Luma\n\nSchreibe deine Notizen in Markdown. Die Formatierung passiert **live**!\n\n- [x] Moderne Tabellen-Unterstützung\n- [ ] Markiere Text für die Flyover-Leiste\n\n| Feature | Status | Beschreibung |\n| :--- | :--- | :--- |\n| WYSIWYG | ✅ | Live-Vorschau |\n| Dark Mode | ✅ | Augenschonend |\n| Export | ✅ | Markdown Datei |\n\n\`\`\`javascript\nconsole.log("Syntax Highlighting inklusive!");\n\`\`\``;
+
 export default function App() {
-  const [markdown, setMarkdown] = useState('# Willkommen bei Luma\n\nSchreibe deine Notizen in Markdown. Die Formatierung passiert **live**!\n\n- [x] Checkboxen werden unterstützt\n- [ ] Markiere Text für die Flyover-Leiste\n\n```javascript\nconsole.log("Syntax Highlighting inklusive!");\n```');
+  const [markdown, setMarkdown] = useState(() => {
+    const saved = localStorage.getItem('luma_note');
+    return saved || DEFAULT_MARKDOWN;
+  });
+  
   const [isSourceMode, setIsSourceMode] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [fontFamily, setFontFamily] = useState(FONT_FAMILIES[0].value);
-  const [fontSize, setFontSize] = useState('18px');
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const saved = localStorage.getItem('luma_dark_mode');
+    return saved === 'true';
+  });
+  const [fontFamily, setFontFamily] = useState(() => localStorage.getItem('luma_font_family') || FONT_FAMILIES[0].value);
+  const [fontSize, setFontSize] = useState(() => localStorage.getItem('luma_font_size') || '18px');
   const [showFlyover, setShowFlyover] = useState(true);
   const [showHelp, setShowHelp] = useState(false);
   
   const editorRef = useRef<EditorRef>(null);
 
   useEffect(() => {
+    localStorage.setItem('luma_note', markdown);
+  }, [markdown]);
+
+  useEffect(() => {
+    localStorage.setItem('luma_dark_mode', isDarkMode.toString());
     document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
 
+  useEffect(() => {
+    localStorage.setItem('luma_font_family', fontFamily);
+  }, [fontFamily]);
+
+  useEffect(() => {
+    localStorage.setItem('luma_font_size', fontSize);
+  }, [fontSize]);
+
   const toggleSourceMode = () => {
     setIsSourceMode(!isSourceMode);
+  };
+
+  const insertTable = () => {
+    const rows = parseInt(window.prompt('Anzahl der Zeilen?', '3') || '0');
+    const cols = parseInt(window.prompt('Anzahl der Spalten?', '3') || '0');
+    
+    if (rows > 0 && cols > 0) {
+      let table = '\n| ' + Array(cols).fill('Header').join(' | ') + ' |\n';
+      table += '| ' + Array(cols).fill('---').join(' | ') + ' |\n';
+      for (let i = 0; i < rows; i++) {
+        table += '| ' + Array(cols).fill('Cell').join(' | ') + ' |\n';
+      }
+      setMarkdown(prev => prev + '\n' + table);
+    }
   };
 
   const handleExport = () => {
@@ -39,7 +75,7 @@ export default function App() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'note.md';
+    a.download = 'luma_note.md';
     a.click();
   };
 
@@ -62,7 +98,7 @@ export default function App() {
           <button 
             className={`menu-item mode-toggle ${isSourceMode ? 'active' : ''}`} 
             onClick={toggleSourceMode} 
-            title={isSourceMode ? "WYSIWYG" : "Source Markdown"}
+            title={isSourceMode ? "Visual" : "Source"}
           >
             {isSourceMode ? <Eye size={18} /> : <Code size={18} />}
             <span>{isSourceMode ? "Source" : "Visual"}</span>
@@ -96,9 +132,14 @@ export default function App() {
             <Layers size={18} />
           </button>
 
-          <button className="menu-item" onClick={() => setShowHelp(true)} title="Markdown Help">
+          <button className="menu-item" onClick={insertTable} title="Tabelle einfügen">
+            <TableIcon size={18} />
+            <span>Tabelle</span>
+          </button>
+
+          <button className="menu-item" onClick={() => setShowHelp(true)} title="Luma Hilfe">
             <HelpCircle size={18} />
-            <span>Help</span>
+            <span>Hilfe</span>
           </button>
         </div>
 
@@ -142,28 +183,28 @@ export default function App() {
             <div className="help-grid">
               <div className="help-item">
                 <h3>Text Styling</h3>
-                <p><code>**Bold**</code> → <strong>Bold</strong></p>
-                <p><code>*Italic*</code> → <em>Italic</em></p>
-                <p><code>~~Strike~~</code> → <del>Strike</del></p>
-                <p><code>`Inline Code`</code></p>
+                <p><code>**Fett**</code> → <strong>Fett</strong></p>
+                <p><code>*Kursiv*</code> → <em>Kursiv</em></p>
+                <p><code>~~Durch~~</code> → <del>Durch</del></p>
+                <p><code>`Code`</code></p>
               </div>
               <div className="help-item">
-                <h3>Headers</h3>
+                <h3>Überschriften</h3>
                 <p><code># H1 Header</code></p>
                 <p><code>## H2 Header</code></p>
                 <p><code>### H3 Header</code></p>
               </div>
               <div className="help-item">
-                <h3>Lists</h3>
-                <p><code>- Bullet point</code></p>
-                <p><code>1. Numbered item</code></p>
-                <p><code>- [x] Task checkbox</code></p>
+                <h3>Listen</h3>
+                <p><code>- Punkt</code></p>
+                <p><code>1. Nummer</code></p>
+                <p><code>- [x] Checkbox</code></p>
               </div>
               <div className="help-item">
-                <h3>Blocks</h3>
-                <p><code>&gt; Blockquote</code></p>
-                <p><code>```js \n Code block \n ```</code></p>
-                <p><code>---</code> (Horizontal rule)</p>
+                <h3>Blöcke</h3>
+                <p><code>&gt; Zitat</code></p>
+                <p><code>\`\`\`js \n Code \n \`\`\`</code></p>
+                <p><code>---</code> (Trennlinie)</p>
               </div>
             </div>
           </div>

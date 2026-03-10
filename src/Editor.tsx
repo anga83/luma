@@ -1,4 +1,4 @@
-import { forwardRef, useRef } from 'react';
+import { forwardRef, useRef, useEffect } from 'react';
 import { Milkdown, useEditor, MilkdownProvider } from '@milkdown/react';
 import { defaultValueCtx, Editor, rootCtx, commandsCtx } from '@milkdown/core';
 import { commonmark } from '@milkdown/preset-commonmark';
@@ -43,8 +43,9 @@ const slash = slashFactory('EDITOR');
 
 const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onChange, fontFamily, fontSize, showFlyover }, _ref) => {
   const lock = useRef(false);
+  const editorRef = useRef<Editor | undefined>(undefined);
 
-  const { get } = useEditor((root) => {
+  const { get, loading } = useEditor((root) => {
     return Editor.make()
       .config((ctx) => {
         ctx.set(rootCtx, root);
@@ -56,7 +57,6 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           }
         });
 
-        // Setup tooltip provider with corrected command execution
         ctx.set(tooltip.key, {
           view: (_view) => {
             const content = document.createElement('div');
@@ -80,8 +80,6 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
               shouldShow: (view) => {
                 const { selection, doc } = view.state;
                 const { from, to, empty } = selection;
-                
-                // Only show if there is a non-empty selection with text content and the editor is focused
                 const hasText = doc.textBetween(from, to).length > 0;
                 return !empty && hasText && view.hasFocus();
               }
@@ -141,6 +139,12 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
       .use(listener);
   }, []);
 
+  useEffect(() => {
+    if (!loading && get()) {
+      editorRef.current = get();
+    }
+  }, [loading, get]);
+
   return (
     <div 
       className={`milkdown-container ${showFlyover ? 'show-flyover' : 'hide-flyover'}`}
@@ -155,7 +159,6 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           outline: none;
         }
         
-        /* Tooltip styling - ensure it follows the data-show attribute */
         .milkdown-tooltip {
           background: var(--bg);
           border: 1px solid var(--border);
@@ -182,67 +185,50 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           display: none !important;
         }
 
-        .tooltip-button {
-          background: transparent;
-          border: none;
-          color: var(--text);
-          padding: 6px 10px;
-          cursor: pointer;
-          font-weight: 600;
-          border-radius: 4px;
-          font-size: 14px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          min-width: 32px;
-        }
-
-        .tooltip-button:hover {
-          background: var(--border);
-          color: var(--accent);
-        }
-
-        .divider {
-          width: 1px;
-          height: 18px;
-          background: var(--border);
-          margin: 0 4px;
-        }
-
-        /* Checkbox styling fix */
-        .milkdown .task-list-item {
+        /* Checkbox styling fix - Target GFM task list items */
+        .milkdown li.task-list-item {
           list-style: none !important;
-          padding-left: 0 !important;
           display: flex !important;
           align-items: flex-start !important;
-          gap: 8px !important;
-          margin-bottom: 4px !important;
+          gap: 10px !important;
+          margin-left: -20px !important;
+          position: relative;
         }
 
-        .milkdown .task-list-item input[type="checkbox"] {
-          margin-top: 6px !important;
+        .milkdown li.task-list-item input[type="checkbox"] {
+          appearance: checkbox !important;
+          -webkit-appearance: checkbox !important;
           width: 16px !important;
           height: 16px !important;
+          margin-top: 6px !important;
           cursor: pointer !important;
+          opacity: 1 !important;
+          position: relative !important;
+          visibility: visible !important;
           flex-shrink: 0 !important;
         }
 
-        .milkdown .task-list-item p {
-          margin: 0 !important;
-          line-height: 1.8 !important;
+        /* Ensure tables look good even without the extra plugin */
+        .milkdown table {
+          border-collapse: collapse;
+          width: 100%;
+          margin: 1.5em 0;
+        }
+        .milkdown th, .milkdown td {
+          border: 1px solid var(--border);
+          padding: 10px 14px;
+        }
+        .milkdown th {
+          background: rgba(0,0,0,0.03);
+          font-weight: 600;
         }
 
         .milkdown pre {
           background: #f6f8fa !important;
           border: 1px solid var(--border) !important;
-          position: relative;
         }
         [data-theme='dark'] .milkdown pre {
           background: #161b22 !important;
-        }
-        .milkdown pre code {
-          background: transparent !important;
-          padding: 0 !important;
         }
       `}</style>
     </div>
