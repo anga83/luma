@@ -1,6 +1,6 @@
 import { forwardRef, useRef } from 'react';
 import { Milkdown, useEditor, MilkdownProvider } from '@milkdown/react';
-import { defaultValueCtx, Editor, rootCtx } from '@milkdown/core';
+import { defaultValueCtx, Editor, rootCtx, commandsCtx } from '@milkdown/core';
 import { commonmark } from '@milkdown/preset-commonmark';
 import { gfm } from '@milkdown/preset-gfm';
 import { history } from '@milkdown/plugin-history';
@@ -12,7 +12,6 @@ import { trailing } from '@milkdown/plugin-trailing';
 import { tooltipFactory, TooltipProvider } from '@milkdown/plugin-tooltip';
 import { slashFactory, SlashProvider } from '@milkdown/plugin-slash';
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
-import { callCommand } from '@milkdown/utils';
 import { 
   toggleStrongCommand, 
   toggleEmphasisCommand, 
@@ -57,7 +56,7 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           }
         });
 
-        // Setup tooltip provider with expanded commands
+        // Setup tooltip provider with corrected command execution
         ctx.set(tooltip.key, {
           view: (_view) => {
             const content = document.createElement('div');
@@ -88,18 +87,19 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
               if (!editor || !commandType) return;
 
               editor.action((ctx) => {
+                const commands = ctx.get(commandsCtx);
                 switch(commandType) {
-                  case 'strong': ctx.get(callCommand(toggleStrongCommand.key, null) as any); break;
-                  case 'emphasis': ctx.get(callCommand(toggleEmphasisCommand.key, null) as any); break;
-                  case 'strike': ctx.get(callCommand(toggleStrikethroughCommand.key, null) as any); break;
-                  case 'inline-code': ctx.get(callCommand(toggleInlineCodeCommand.key, null) as any); break;
-                  case 'bullet-list': ctx.get(callCommand(wrapInBulletListCommand.key, null) as any); break;
-                  case 'ordered-list': ctx.get(callCommand(wrapInOrderedListCommand.key, null) as any); break;
-                  case 'quote': ctx.get(callCommand(wrapInBlockquoteCommand.key, null) as any); break;
-                  case 'code-block': ctx.get(callCommand(createCodeBlockCommand.key, null) as any); break;
+                  case 'strong': commands.call(toggleStrongCommand.key); break;
+                  case 'emphasis': commands.call(toggleEmphasisCommand.key); break;
+                  case 'strike': commands.call(toggleStrikethroughCommand.key); break;
+                  case 'inline-code': commands.call(toggleInlineCodeCommand.key); break;
+                  case 'bullet-list': commands.call(wrapInBulletListCommand.key); break;
+                  case 'ordered-list': commands.call(wrapInOrderedListCommand.key); break;
+                  case 'quote': commands.call(wrapInBlockquoteCommand.key); break;
+                  case 'code-block': commands.call(createCodeBlockCommand.key); break;
                   case 'link': {
                     const url = window.prompt('Enter Link URL', 'https://');
-                    if (url) ctx.get(callCommand(updateLinkCommand.key, { href: url }) as any);
+                    if (url) commands.call(updateLinkCommand.key, { href: url });
                     break;
                   }
                 }
@@ -161,6 +161,7 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           padding: 2px;
           gap: 2px;
           z-index: 1000;
+          pointer-events: auto;
         }
 
         .tooltip-button {
@@ -190,6 +191,29 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           margin: 0 4px;
         }
 
+        /* Checkbox styling fix */
+        .milkdown .task-list-item {
+          list-style: none !important;
+          padding-left: 0 !important;
+          display: flex !important;
+          align-items: flex-start !important;
+          gap: 8px !important;
+          margin-bottom: 4px !important;
+        }
+
+        .milkdown .task-list-item input[type="checkbox"] {
+          margin-top: 6px !important;
+          width: 16px !important;
+          height: 16px !important;
+          cursor: pointer !important;
+          flex-shrink: 0 !important;
+        }
+
+        .milkdown .task-list-item p {
+          margin: 0 !important;
+          line-height: 1.8 !important;
+        }
+
         .milkdown pre {
           background: #f6f8fa !important;
           border: 1px solid var(--border) !important;
@@ -201,17 +225,6 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
         .milkdown pre code {
           background: transparent !important;
           padding: 0 !important;
-        }
-        
-        .milkdown .task-list-item {
-          list-style: none !important;
-          padding-left: 1.5em !important;
-          position: relative;
-        }
-        .milkdown .task-list-item input {
-          position: absolute;
-          left: 0;
-          top: 0.5em;
         }
       `}</style>
     </div>
