@@ -16,7 +16,7 @@ const FONT_FAMILIES = [
 const FONT_SIZES = ['14px', '16px', '18px', '20px', '22px'];
 
 export default function App() {
-  const [markdown, setMarkdown] = useState('# Hello Typora Clone\n\nStart typing your markdown here. Formatting happens **live**!\n\n- [x] Checkboxes supported\n- [ ] Try marking text for the flyover bar\n\n```javascript\nconsole.log("Syntax highlighting included!");\n```');
+  const [markdown, setMarkdown] = useState('# Willkommen bei Luma\n\nSchreibe deine Notizen in Markdown. Die Formatierung passiert **live**!\n\n- [x] Checkboxen werden unterstützt\n- [ ] Markiere Text für die Flyover-Leiste\n\n```javascript\nconsole.log("Syntax Highlighting inklusive!");\n```');
   const [isSourceMode, setIsSourceMode] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [fontFamily, setFontFamily] = useState(FONT_FAMILIES[0].value);
@@ -138,7 +138,7 @@ export default function App() {
         <div className="help-overlay" onClick={() => setShowHelp(false)}>
           <div className="help-content" onClick={e => e.stopPropagation()}>
             <button className="help-close" onClick={() => setShowHelp(false)}>✕</button>
-            <h2>Markdown Syntax Help</h2>
+            <h2>Luma Syntax Hilfe</h2>
             <div className="help-grid">
               <div className="help-item">
                 <h3>Text Styling</h3>
