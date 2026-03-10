@@ -159,6 +159,23 @@ body {
   opacity: 0.9;
 }
 
+.menu-select {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.menu-select:hover {
+  border-color: var(--accent);
+}
+
 .menu-item:active {
   transform: translateY(1px);
 }
