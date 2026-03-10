@@ -148,18 +148,21 @@ body {
   color: var(--text);
 }
 
-.menu-item:hover {
-  background-color: var(--border);
+.menu-item.active {
+  background-color: var(--accent);
+  color: white;
+  border-color: var(--accent);
 }
 
-.menu-select {
-  padding: 4px 8px;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
-  cursor: pointer;
+.menu-item.active:hover {
+  background-color: var(--accent);
+  opacity: 0.9;
 }
+
+.menu-item:active {
+  transform: translateY(1px);
+}
+
 
 /* Bubble Menu / Tooltip */
 .milkdown-tooltip {
