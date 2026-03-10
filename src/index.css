@@ -1,0 +1,202 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Libre+Baskerville&family=Playfair+Display&display=swap');
+
+:root {
+  --off-black: #2c2c2c;
+  --off-white: #fafafa;
+  --bg: #ffffff;
+  --text: var(--off-black);
+  --border: #e0e0e0;
+  --accent: #007aff;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Libre Baskerville', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-playfair: 'Playfair Display', serif;
+  
+  --editor-width: 850px;
+  --menu-height: 50px;
+}
+
+[data-theme='dark'] {
+  --bg: #1a1a1a;
+  --text: #e0e0e0;
+  --border: #333333;
+  --accent: #0a84ff;
+  --off-black: #e0e0e0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background-color: var(--bg);
+  color: var(--text);
+  transition: background-color 0.3s, color 0.3s;
+  min-height: 100vh;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Editor Styling */
+.milkdown {
+  width: 100%;
+  max-width: var(--editor-width);
+  margin: 0 auto;
+  padding: 60px 40px;
+  outline: none;
+}
+
+.milkdown .editor {
+  outline: none;
+  min-height: calc(100vh - var(--menu-height) - 120px);
+}
+
+/* Typography styles to look like Typora */
+.milkdown h1 { font-size: 2.5em; margin: 0.67em 0 0.5em; border-bottom: 1px solid var(--border); padding-bottom: 0.3em; font-weight: 600; }
+.milkdown h2 { font-size: 1.8em; margin: 1.5em 0 0.8em; border-bottom: 1px solid var(--border); padding-bottom: 0.2em; font-weight: 600; }
+.milkdown h3 { font-size: 1.5em; margin: 1.5em 0 0.8em; font-weight: 600; }
+.milkdown h4 { font-size: 1.25em; margin: 1.2em 0 0.8em; font-weight: 600; }
+.milkdown p { line-height: 1.8; margin-bottom: 1.2em; }
+.milkdown blockquote {
+  border-left: 4px solid var(--border);
+  margin: 1.5em 0;
+  padding: 0 1em;
+  color: #6a737d;
+  font-style: italic;
+}
+.milkdown ul, .milkdown ol { margin-bottom: 1.2em; padding-left: 2em; }
+.milkdown li { margin-bottom: 0.5em; }
+.milkdown img { max-width: 100%; height: auto; display: block; margin: 1.5em auto; border-radius: 4px; }
+.milkdown hr { height: 2px; padding: 0; margin: 2em 0; background-color: var(--border); border: 0; }
+.milkdown table { border-collapse: collapse; width: 100%; margin: 1.5em 0; }
+.milkdown table th, .milkdown table td { border: 1px solid var(--border); padding: 8px 12px; }
+.milkdown table th { background-color: rgba(0,0,0,0.03); }
+
+/* Code styling */
+.milkdown pre {
+  background: #f6f8fa;
+  padding: 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  margin: 1.5em 0;
+}
+[data-theme='dark'] .milkdown pre {
+  background: #161b22;
+}
+.milkdown code {
+  font-family: var(--font-mono);
+  background-color: rgba(27,31,35,0.05);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 85%;
+}
+[data-theme='dark'] .milkdown code {
+  background-color: rgba(255,255,255,0.1);
+}
+
+/* Source View styling */
+.source-view {
+  width: 100%;
+  max-width: var(--editor-width);
+  margin: 0 auto;
+  padding: 60px 40px;
+  font-family: var(--font-mono);
+  white-space: pre-wrap;
+  outline: none;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 1em;
+  line-height: 1.7;
+  resize: none;
+  min-height: calc(100vh - var(--menu-height));
+}
+
+/* Custom UI Components */
+.menu-bar {
+  height: var(--menu-height);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 15px;
+  background-color: var(--bg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  font-size: 14px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+}
+
+.menu-item:hover {
+  background-color: var(--border);
+}
+
+.menu-select {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* Bubble Menu / Tooltip */
+.milkdown-tooltip {
+  position: absolute;
+  z-index: 200;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tooltip-button {
+  padding: 4px;
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tooltip-button:hover {
+  background: var(--border);
+}
+
+.tooltip-button.active {
+  color: var(--accent);
+  background: rgba(0, 122, 255, 0.1);
+}
