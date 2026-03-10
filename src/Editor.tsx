@@ -75,7 +75,17 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
               <button class="tooltip-button" data-command="code-block" title="Code Block">Code</button>
             `;
             
-            const provider = new TooltipProvider({ content });
+            const provider = new TooltipProvider({ 
+              content,
+              shouldShow: (view) => {
+                const { selection, doc } = view.state;
+                const { from, to, empty } = selection;
+                
+                // Only show if there is a non-empty selection with text content and the editor is focused
+                const hasText = doc.textBetween(from, to).length > 0;
+                return !empty && hasText && view.hasFocus();
+              }
+            });
 
             content.addEventListener('mousedown', (e) => {
               e.preventDefault();
@@ -145,12 +155,7 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           outline: none;
         }
         
-        .hide-flyover .milkdown-tooltip {
-          display: none !important;
-        }
-
-        .milkdown .token { background: transparent !important; }
-        
+        /* Tooltip styling - ensure it follows the data-show attribute */
         .milkdown-tooltip {
           background: var(--bg);
           border: 1px solid var(--border);
@@ -161,7 +166,20 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           padding: 2px;
           gap: 2px;
           z-index: 1000;
+          opacity: 0;
+          visibility: hidden;
+          transition: opacity 0.2s, visibility 0.2s;
+          pointer-events: none;
+        }
+
+        .milkdown-tooltip[data-show="true"] {
+          opacity: 1;
+          visibility: visible;
           pointer-events: auto;
+        }
+
+        .hide-flyover .milkdown-tooltip {
+          display: none !important;
         }
 
         .tooltip-button {

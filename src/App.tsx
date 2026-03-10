@@ -3,7 +3,7 @@ import { MarkdownEditor } from './Editor';
 import type { EditorRef } from './Editor';
 import { 
   FileUp, FileDown, 
-  Moon, Sun, Eye, Code, Layers, Settings
+  Moon, Sun, Eye, Code, Layers, HelpCircle
 } from 'lucide-react';
 
 const FONT_FAMILIES = [
@@ -97,7 +97,7 @@ export default function App() {
           </button>
 
           <button className="menu-item" onClick={() => setShowHelp(true)} title="Markdown Help">
-            <Settings size={18} />
+            <HelpCircle size={18} />
             <span>Help</span>
           </button>
         </div>
