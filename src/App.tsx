@@ -28,7 +28,7 @@ type LanguageSetting = 'auto' | 'de' | 'en';
 
 const translations = {
   de: {
-    welcome: '# Willkommen bei Luma\n\nSchreibe deine Notizen in Markdown. Die Formatierung passiert **live**!\n\n- [x] Moderne Tabellen\n- [ ] Markiere diesen Text für die Flyover-Leiste\n- [-] Ausstehende Aufgabe (Pending)\n\n| Feature | Beschreibung |\n| :--- | :--- |\n| WYSIWYG | Live-Vorschau beim Tippen |\n| Export | Markdown & PDF Export |\n| Checkboxen | Aufgabenlisten einfach verwalten |\n\n```javascript\nconsole.log("Syntax Highlighting inklusive!");\n```',
+    welcome: '# Willkommen bei Luma\n\nSchreibe deine Notizen in Markdown. Die Formatierung passiert **live**!\n\n- Moderne Tabellen\n- Markiere diesen Text für die Flyover-Leiste\n- Fokus auf das Wesentliche\n\n| Feature | Beschreibung |\n| :--- | :--- |\n| WYSIWYG | Live-Vorschau beim Tippen |\n| Export | Markdown & PDF Export |\n| Fokus | Abgelenkt-freies Schreiben |\n\n```javascript\nconsole.log("Syntax Highlighting inklusive!");\n```',
     import: 'Importieren',
     export: 'Exportieren',
     help: 'Hilfe & Einstellungen',
@@ -52,22 +52,18 @@ const translations = {
     code: 'Code',
     quote: 'Zitat',
     hr: 'Trennlinie',
-    checkbox: 'Checkbox',
     langAuto: 'Browser-Standard',
     langDe: 'Deutsch',
     langEn: 'English',
     rowHeight: 'Tabellen-Zeilenhöhe',
     exportMd: 'Als Markdown (.md)',
     exportPdf: 'Als PDF (.pdf)',
-    taskPending: 'Ausstehend',
-    taskDone: 'Erledigt',
-    taskOpen: 'Offen',
     gfmFeatures: 'GFM Erweiterungen',
     autolink: 'Auto-Links',
     footnote: 'Fußnote'
   },
   en: {
-    welcome: '# Welcome to Luma\n\nWrite your notes in Markdown. Formatting happens **live**!\n\n- [x] Modern tables\n- [ ] Highlight this text for the flyover toolbar\n- [-] Pending task state\n\n| Feature | Description |\n| :--- | :--- |\n| WYSIWYG | Real-time preview as you type |\n| Export | Markdown & PDF export |\n| Checkboxen | Easy task management |\n\n```javascript\nconsole.log("Syntax highlighting included!");\n```',
+    welcome: '# Welcome to Luma\n\nWrite your notes in Markdown. Formatting happens **live**!\n\n- Modern tables\n- Highlight this text for the flyover toolbar\n- Focus on what matters\n\n| Feature | Description |\n| :--- | :--- |\n| WYSIWYG | Real-time preview as you type |\n| Export | Markdown & PDF export |\n| Focus | Distraction-free writing |\n\n```javascript\nconsole.log("Syntax highlighting included!");\n```',
     import: 'Import',
     export: 'Export',
     help: 'Help & Settings',
@@ -91,16 +87,12 @@ const translations = {
     code: 'Code',
     quote: 'Quote',
     hr: 'Divider',
-    checkbox: 'Checkbox',
     langAuto: 'Browser Default',
     langDe: 'Deutsch',
     langEn: 'English',
     rowHeight: 'Table Row Height',
     exportMd: 'As Markdown (.md)',
     exportPdf: 'As PDF (.pdf)',
-    taskPending: 'Pending',
-    taskDone: 'Done',
-    taskOpen: 'Open',
     gfmFeatures: 'GFM Extensions',
     autolink: 'Auto-links',
     footnote: 'Footnote'
@@ -395,12 +387,9 @@ export default function App() {
                 <p><code>---</code> ({t.hr})</p>
               </div>
               <div className="help-item">
-                <h3>{t.lists} & {t.checkbox}</h3>
+                <h3>{t.lists}</h3>
                 <p><code>- {t.bold}</code></p>
                 <p><code>1. {t.bold}</code></p>
-                <p><code>- [ ] {t.taskOpen}</code></p>
-                <p><code>- [x] {t.taskDone}</code></p>
-                <p><code>- [-] {t.taskPending}</code></p>
               </div>
               <div className="help-item">
                 <h3>{t.gfmFeatures}</h3>

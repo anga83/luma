@@ -52,8 +52,7 @@ const ICONS = {
   link: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
   quote: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2h3c0 4-4 6-4 6zm14 0c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2h3c0 4-4 6-4 6z"/></svg>',
   bullet: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
-  number: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>',
-  check: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><polyline points="9 11 12 14 22 4"/></svg>'
+  number: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>'
 };
 
 const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onChange, fontFamily, fontSize, showFlyover, tableRowHeight }, ref) => {
@@ -87,7 +86,6 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
               <div class="divider"></div>
               <button class="tooltip-button" data-command="bullet-list" title="Bullet List">${ICONS.bullet}</button>
               <button class="tooltip-button" data-command="ordered-list" title="Ordered List">${ICONS.number}</button>
-              <button class="tooltip-button" data-command="task-list" title="Task List">${ICONS.check}</button>
               <button class="tooltip-button" data-command="quote" title="Quote">${ICONS.quote}</button>
               <div class="divider"></div>
               <button class="tooltip-button" data-command="link" title="Link">${ICONS.link}</button>
@@ -123,18 +121,6 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
                   case 'inline-code': commands.call(toggleInlineCodeCommand.key); break;
                   case 'bullet-list': commands.call(wrapInBulletListCommand.key); break;
                   case 'ordered-list': commands.call(wrapInOrderedListCommand.key); break;
-                  case 'task-list': {
-                    const { state } = currentView;
-                    const { selection } = state;
-                    const text = state.doc.textBetween(selection.from, selection.to, '\n');
-                    const taskList = text.split('\n').map(line => {
-                      if (/^[-*]\s\[[ x-]\]/.test(line)) return line;
-                      return `- [ ] ${line}`;
-                    }).join('\n');
-                    
-                    commands.call(insert as any, taskList);
-                    break;
-                  }
                   case 'quote': commands.call(wrapInBlockquoteCommand.key); break;
                   case 'link': {
                     const url = window.prompt('Enter Link URL', 'https://');
@@ -258,93 +244,14 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           width: 1px; height: 18px; background: var(--border); margin: 0 4px;
         }
 
-        /* BRUTE FORCE CHECKBOX RENDERING */
-        .milkdown ul {
-          padding-left: 20px !important;
+        /* Standard list styling */
+        .milkdown ul, .milkdown ol {
+          padding-left: 2rem !important;
+          margin: 1em 0 !important;
         }
         
         .milkdown li {
-          list-style: none !important;
-          position: relative !important;
-          padding-left: 28px !important;
-          margin-bottom: 6px !important;
-        }
-
-        /* Default bullet for non-checkbox items */
-        .milkdown li:not(.task-list-item):not([data-item-type="task"])::before {
-          content: "•";
-          position: absolute;
-          left: 8px;
-          color: var(--text);
-          opacity: 0.5;
-        }
-
-        /* Task list specific styling */
-        .milkdown .task-list-item, .milkdown li[data-item-type="task"] {
-          padding-left: 28px !important;
-        }
-
-        .milkdown .task-list-item input[type="checkbox"],
-        .milkdown li[data-item-type="task"] input[type="checkbox"] {
-          position: absolute !important;
-          left: 0 !important;
-          top: 4px !important;
-          margin: 0 !important;
-          width: 18px !important;
-          height: 18px !important;
-          appearance: checkbox !important;
-          -webkit-appearance: checkbox !important;
-          cursor: pointer !important;
-          opacity: 1 !important;
-          visibility: visible !important;
-          z-index: 10 !important;
-        }
-
-        /* Manual Checkbox look if node fails to render as input */
-        .milkdown li:contains("[ ] "), 
-        .milkdown li:contains("[x] "),
-        .milkdown li:contains("[-] ") {
-          list-style: none !important;
-        }
-
-        .milkdown li:contains("[ ] ")::before,
-        .milkdown li:contains("[x] ")::before,
-        .milkdown li:contains("[-] ")::before {
-          content: "" !important;
-          position: absolute;
-          left: 0;
-          top: 4px;
-          width: 18px;
-          height: 18px;
-          border: 1px solid var(--border);
-          border-radius: 3px;
-          background: var(--bg);
-        }
-
-        .milkdown li:contains("[x] ")::before {
-          background: var(--accent) !important;
-          border-color: var(--accent) !important;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E") !important;
-          background-size: 14px !important;
-          background-repeat: no-repeat !important;
-          background-position: center !important;
-        }
-
-        .milkdown li:contains("[-] ")::before {
-          background: #ff9500 !important;
-          border-color: #ff9500 !important;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'%3E%3C/line%3E%3C/svg%3E") !important;
-          background-size: 14px !important;
-          background-repeat: no-repeat !important;
-          background-position: center !important;
-        }
-
-        /* Remove literal text markers if CSS fallback is used */
-        .milkdown li:contains("[ ] ") > p:first-child,
-        .milkdown li:contains("[x] ") > p:first-child,
-        .milkdown li:contains("[-] ") > p:first-child {
-          text-indent: -3ch;
-          display: inline-block;
+          margin-bottom: 0.5em !important;
         }
 
         /* Table styling */

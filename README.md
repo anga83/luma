@@ -9,9 +9,9 @@ Luma ist eine moderne, minimalistische Web-App für das Schreiben von Notizen in
 ### Haupt-Features
 *   **Live WYSIWYG Editing:** Markdown wird sofort beim Tippen gerendert (Überschriften, Listen, Tabellen etc.).
 *   **Visual/Source Toggle:** Ein nahtloser Wechsel zwischen der formatierten Ansicht und dem Markdown-Quelltext über einen dedizierten Modus-Button mit fixer Breite für maximale Layout-Stabilität.
-*   **Flyover-Toolbar:** Eine kontextuelle Formatierungsleiste mit Lucide-Icons, die bei Textmarkierung erscheint und gängige Formatierungen (Fett, Kursiv, Link, Listen, Task-Listen etc.) per Klick erlaubt.
+*   **Flyover-Toolbar:** Eine kontextuelle Formatierungsleiste mit Lucide-Icons, die bei Textmarkierung erscheint und gängige Formatierungen (Fett, Kursiv, Link, Listen etc.) per Klick erlaubt.
 *   **Grafischer Tabellen-Dialog:** Ein Popover zum komfortablen Einfügen von Tabellen mit wählbarer Zeilen-/Spaltenanzahl und Überschrift-Option.
-*   **GFM Erweiterungen:** Volle Unterstützung für GitHub Flavored Markdown inklusive Task-Listen (Offen, Erledigt, Ausstehend `[-]`), Autolinks und Fußnoten.
+*   **GFM Erweiterungen:** Volle Unterstützung für GitHub Flavored Markdown inklusive Tabellen, Autolinks und Fußnoten.
 *   **Export-Optionen:** Dokumente können als Standard-Markdown-Datei (.md) oder als formatiertes PDF (.pdf) exportiert werden.
 
 
@@ -22,7 +22,6 @@ Luma ist eine moderne, minimalistische Web-App für das Schreiben von Notizen in
 *   **Dark Mode:** Ein integriertes dunkles Theme für angenehmes Schreiben.
 *   **Hilfe & Einstellungen:** Ein kombiniertes Popover für Markdown-Syntax-Hilfe und Spracheinstellungen.
 *   **Variable Tabellen-Dichte:** Die Zeilenhöhe von Tabellen lässt sich feinstufig (S, M, L, XL) anpassen, wobei "S" eine extrem kompakte Darstellung bietet.
-*   **Interaktive Checkboxen:** Task-Listen (`[ ]` / `[x]`) werden als echte, nutzbare Checkboxen gerendert.
 
 ## Technischer Aufbau
 
@@ -43,7 +42,6 @@ Für zukünftige Entwicklungen oder Erweiterungen durch ein LLM sind hier wichti
 *   **Editor-Synchronisation:** Die App nutzt einen `editorKey` in `App.tsx`, um den Editor bei externen Inhaltsänderungen (wie dem Einfügen von Tabellen) neu zu laden ("Hidden Reload"). Dies umgeht Synchronisationsprobleme bei unkontrollierten Komponenten.
 *   **Milkdown v7 Integration:** Befehle werden über `commandsCtx.call()` innerhalb von `editor.action` ausgeführt.
 *   **Tabellen-Handling:** Da das offizielle Table-Plugin in dieser Umgebung inkompatibel war, werden Tabellen als Markdown-Strings generiert und in den State injiziert. Die Zell-Padding-Werte werden über die CSS-Variable `--table-padding` gesteuert.
-*   **Checkboxen (Task Lists):** Spezifische CSS-Overrides in `Editor.tsx` sorgen dafür, dass die GFM-Checkboxen sichtbar und korrekt positioniert sind.
 *   **Flyover Toolbar:** Der `TooltipProvider` prüft aktiv auf Textinhalt (`doc.textBetween`), um nicht auf leeren Zeilen zu erscheinen. Die Icons sind als Inline-SVGs in `Editor.tsx` definiert.
 *   **Lokalisierung:** Zentral verwaltet über das `translations`-Objekt. Der `langSetting`-Status unterstützt `auto`, `de` und `en`.
 
