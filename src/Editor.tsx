@@ -1,6 +1,6 @@
 import { forwardRef, useRef, useEffect, useImperativeHandle } from 'react';
 import { Milkdown, useEditor, MilkdownProvider } from '@milkdown/react';
-import { defaultValueCtx, Editor, rootCtx, commandsCtx, editorViewCtx } from '@milkdown/core';
+import { defaultValueCtx, Editor, rootCtx, commandsCtx } from '@milkdown/core';
 import { commonmark } from '@milkdown/preset-commonmark';
 import { gfm } from '@milkdown/preset-gfm';
 import { history } from '@milkdown/plugin-history';
@@ -20,7 +20,6 @@ import {
   wrapInBulletListCommand,
   wrapInOrderedListCommand,
   toggleInlineCodeCommand,
-  createCodeBlockCommand,
   updateLinkCommand
 } from '@milkdown/preset-commonmark';
 import { toggleStrikethroughCommand } from '@milkdown/preset-gfm';
@@ -33,6 +32,7 @@ interface EditorProps {
   fontFamily: string;
   fontSize: string;
   showFlyover: boolean;
+  tableRowHeight: string;
 }
 
 export interface EditorRef {
@@ -43,7 +43,19 @@ export interface EditorRef {
 const tooltip = tooltipFactory('EDITOR');
 const slash = slashFactory('EDITOR');
 
-const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onChange, fontFamily, fontSize, showFlyover }, ref) => {
+// Minimal Lucide-like SVG Icons for the flyover bar
+const ICONS = {
+  bold: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>',
+  italic: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>',
+  strike: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4H9a3 3 0 0 0-2.83 4"/><path d="M14 12a4 4 0 0 1 0 8H6"/><line x1="4" y1="12" x2="20" y2="12"/></svg>',
+  code: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+  link: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
+  quote: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2h3c0 4-4 6-4 6zm14 0c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2h3c0 4-4 6-4 6z"/></svg>',
+  bullet: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+  number: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>'
+};
+
+const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onChange, fontFamily, fontSize, showFlyover, tableRowHeight }, ref) => {
   const lock = useRef(false);
   const editorRef = useRef<Editor | undefined>(undefined);
 
@@ -59,22 +71,22 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           }
         });
 
+        // Setup tooltip provider with expanded commands & icons
         ctx.set(tooltip.key, {
           view: (_view) => {
             const content = document.createElement('div');
             content.className = 'milkdown-tooltip';
             content.innerHTML = `
-              <button class="tooltip-button" data-command="strong" title="Bold">B</button>
-              <button class="tooltip-button" data-command="emphasis" title="Italic">I</button>
-              <button class="tooltip-button" data-command="strike" title="Strike">S</button>
-              <button class="tooltip-button" data-command="inline-code" title="Inline Code">{}</button>
+              <button class="tooltip-button" data-command="strong" title="Bold">${ICONS.bold}</button>
+              <button class="tooltip-button" data-command="emphasis" title="Italic">${ICONS.italic}</button>
+              <button class="tooltip-button" data-command="strike" title="Strike">${ICONS.strike}</button>
+              <button class="tooltip-button" data-command="inline-code" title="Inline Code">${ICONS.code}</button>
               <div class="divider"></div>
-              <button class="tooltip-button" data-command="bullet-list" title="Bullet List">•</button>
-              <button class="tooltip-button" data-command="ordered-list" title="Ordered List">1.</button>
-              <button class="tooltip-button" data-command="quote" title="Quote">"</button>
+              <button class="tooltip-button" data-command="bullet-list" title="Bullet List">${ICONS.bullet}</button>
+              <button class="tooltip-button" data-command="ordered-list" title="Ordered List">${ICONS.number}</button>
+              <button class="tooltip-button" data-command="quote" title="Quote">${ICONS.quote}</button>
               <div class="divider"></div>
-              <button class="tooltip-button" data-command="link" title="Link">Link</button>
-              <button class="tooltip-button" data-command="code-block" title="Code Block">Code</button>
+              <button class="tooltip-button" data-command="link" title="Link">${ICONS.link}</button>
             `;
             
             const provider = new TooltipProvider({ 
@@ -106,7 +118,6 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
                   case 'bullet-list': commands.call(wrapInBulletListCommand.key); break;
                   case 'ordered-list': commands.call(wrapInOrderedListCommand.key); break;
                   case 'quote': commands.call(wrapInBlockquoteCommand.key); break;
-                  case 'code-block': commands.call(createCodeBlockCommand.key); break;
                   case 'link': {
                     const url = window.prompt('Enter Link URL', 'https://');
                     if (url) commands.call(updateLinkCommand.key, { href: url });
@@ -153,7 +164,7 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
       if (editor) {
         lock.current = true;
         editor.action((ctx) => {
-          ctx.get(commandsCtx).call(replaceAll, markdown);
+          ctx.get(commandsCtx).call(replaceAll as any, markdown);
         });
         lock.current = false;
       }
@@ -164,7 +175,11 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
   return (
     <div 
       className={`milkdown-container ${showFlyover ? 'show-flyover' : 'hide-flyover'}`}
-      style={{ '--font-family': fontFamily, '--font-size': fontSize } as any}
+      style={{ 
+        '--font-family': fontFamily, 
+        '--font-size': fontSize,
+        '--table-padding': tableRowHeight 
+      } as any}
     >
       <Milkdown />
       <style>{`
@@ -178,22 +193,24 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
         .milkdown-tooltip {
           background: var(--bg);
           border: 1px solid var(--border);
-          border-radius: 6px;
+          border-radius: 8px;
           display: flex;
           align-items: center;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-          padding: 2px;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+          padding: 4px;
           gap: 2px;
           z-index: 1000;
           opacity: 0;
           visibility: hidden;
-          transition: opacity 0.2s, visibility 0.2s;
+          transition: opacity 0.2s, transform 0.2s;
+          transform: translateY(5px);
           pointer-events: none;
         }
 
         .milkdown-tooltip[data-show="true"] {
           opacity: 1;
           visibility: visible;
+          transform: translateY(0);
           pointer-events: auto;
         }
 
@@ -201,25 +218,61 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           display: none !important;
         }
 
+        .tooltip-button {
+          background: transparent;
+          border: none;
+          color: var(--text);
+          padding: 6px;
+          cursor: pointer;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.2s;
+        }
+
+        .tooltip-button:hover {
+          background: var(--border);
+          color: var(--accent);
+        }
+
+        .tooltip-button svg {
+          stroke: currentColor;
+        }
+
+        .divider {
+          width: 1px;
+          height: 18px;
+          background: var(--border);
+          margin: 0 4px;
+        }
+
+        /* Checkbox styling fix */
         .milkdown li.task-list-item {
           list-style: none !important;
           display: flex !important;
           align-items: flex-start !important;
           gap: 10px !important;
           margin-left: -20px !important;
+          position: relative !important;
         }
 
         .milkdown li.task-list-item input[type="checkbox"] {
           appearance: checkbox !important;
           -webkit-appearance: checkbox !important;
-          width: 16px !important;
-          height: 16px !important;
-          margin-top: 6px !important;
+          width: 18px !important;
+          height: 18px !important;
+          margin-top: 4px !important;
           cursor: pointer !important;
           opacity: 1 !important;
-          position: relative !important;
           visibility: visible !important;
           flex-shrink: 0 !important;
+          z-index: 10 !important;
+        }
+
+        /* Table row height setting */
+        .milkdown td, .milkdown th {
+          padding: var(--table-padding) 14px !important;
         }
 
         .milkdown table {
@@ -227,21 +280,12 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           width: 100%;
           margin: 1.5em 0;
         }
-        .milkdown th, .milkdown td {
-          border: 1px solid var(--border);
-          padding: 10px 14px;
-        }
         .milkdown th {
           background: rgba(0,0,0,0.03);
           font-weight: 600;
         }
-
-        .milkdown pre {
-          background: #f6f8fa !important;
-          border: 1px solid var(--border) !important;
-        }
-        [data-theme='dark'] .milkdown pre {
-          background: #161b22 !important;
+        [data-theme='dark'] .milkdown th {
+          background: rgba(255,255,255,0.05);
         }
       `}</style>
     </div>

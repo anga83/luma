@@ -3,8 +3,10 @@ import { MarkdownEditor } from './Editor';
 import type { EditorRef } from './Editor';
 import { 
   FileUp, FileDown, 
-  Moon, Sun, Eye, Code, Layers, HelpCircle, Table as TableIcon, Globe
+  Moon, Sun, Eye, Code, Layers, HelpCircle, Table as TableIcon, Globe, Settings, FileText
 } from 'lucide-react';
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
 
 const FONT_FAMILIES = [
   { label: 'System Sans', value: 'var(--font-sans)' },
@@ -14,25 +16,32 @@ const FONT_FAMILIES = [
 ];
 
 const FONT_SIZES = ['14px', '16px', '18px', '20px', '22px'];
+const ROW_HEIGHTS = [
+  { label: 'S', value: '4px' },
+  { label: 'M', value: '10px' },
+  { label: 'L', value: '16px' },
+  { label: 'XL', value: '22px' },
+];
 
 type Language = 'de' | 'en';
+type LanguageSetting = 'auto' | 'de' | 'en';
 
 const translations = {
   de: {
-    welcome: '# Willkommen bei Luma\n\nSchreibe deine Notizen in Markdown. Die Formatierung passiert **live**!\n\n- [x] Moderne Tabellen-Unterstützung\n- [ ] Markiere Text für die Flyover-Leiste\n\n| Feature | Status | Beschreibung |\n| :--- | :--- | :--- |\n| WYSIWYG | ✅ | Live-Vorschau |\n| Dark Mode | ✅ | Augenschonend |\n| Export | ✅ | Markdown Datei |\n\n```javascript\nconsole.log("Syntax Highlighting inklusive!");\n```',
+    welcome: '# Willkommen bei Luma\n\nSchreibe deine Notizen in Markdown. Die Formatierung passiert **live**!\n\n- [x] Elegante Tabellen\n- [ ] Markiere diesen Text, um die Formatierungs-Leiste zu sehen\n\n| Feature | Beschreibung |\n| :--- | :--- |\n| WYSIWYG | Echte Live-Vorschau beim Tippen |\n| Export | Markdown & PDF Unterstützung |\n| Checkboxen | Aufgabenlisten einfach verwalten |\n\n```javascript\nconsole.log("Syntax Highlighting inklusive!");\n```',
     import: 'Importieren',
     export: 'Exportieren',
-    help: 'Hilfe',
+    help: 'Hilfe & Einstellungen',
     table: 'Tabelle',
     language: 'Sprache',
     theme: 'Theme',
-    flyover: 'Flyover-Leiste',
+    flyover: 'Formatierungs-Leiste bei Markierung',
     rows: 'Zeilen',
     cols: 'Spalten',
-    headerRow: 'Erste Zeile als Überschrift',
+    headerRow: 'Überschrift-Zeile',
     insert: 'Einfügen',
     cancel: 'Abbrechen',
-    syntaxHelp: 'Luma Syntax Hilfe',
+    syntaxHelp: 'Luma Syntax & Hilfe',
     textStyling: 'Text-Formatierung',
     headers: 'Überschriften',
     lists: 'Listen',
@@ -43,23 +52,29 @@ const translations = {
     code: 'Code',
     quote: 'Zitat',
     hr: 'Trennlinie',
-    checkbox: 'Checkbox'
+    checkbox: 'Checkbox',
+    langAuto: 'Browser-Standard',
+    langDe: 'Deutsch',
+    langEn: 'English',
+    rowHeight: 'Tabellen-Zeilenhöhe',
+    exportMd: 'Als Markdown (.md)',
+    exportPdf: 'Als PDF (.pdf)'
   },
   en: {
-    welcome: '# Welcome to Luma\n\nWrite your notes in Markdown. Formatting happens **live**!\n\n- [x] Modern table support\n- [ ] Highlight text for the flyover toolbar\n\n| Feature | Status | Description |\n| :--- | :--- | :--- |\n| WYSIWYG | ✅ | Live preview |\n| Dark Mode | ✅ | Easy on the eyes |\n| Export | ✅ | Markdown file |\n\n```javascript\nconsole.log("Syntax highlighting included!");\n```',
+    welcome: '# Welcome to Luma\n\nWrite your notes in Markdown. Formatting happens **live**!\n\n- [x] Elegant tables\n- [ ] Highlight this text to see the formatting toolbar\n\n| Feature | Description |\n| :--- | :--- |\n| WYSIWYG | Real-time preview as you type |\n| Export | Markdown & PDF support |\n| Checkboxen | Easy task management |\n\n```javascript\nconsole.log("Syntax highlighting included!");\n```',
     import: 'Import',
     export: 'Export',
-    help: 'Help',
+    help: 'Help & Settings',
     table: 'Table',
     language: 'Language',
     theme: 'Theme',
-    flyover: 'Flyover Toolbar',
+    flyover: 'Format toolbar on selection',
     rows: 'Rows',
     cols: 'Columns',
-    headerRow: 'First row as header',
+    headerRow: 'Header Row',
     insert: 'Insert',
     cancel: 'Cancel',
-    syntaxHelp: 'Luma Syntax Help',
+    syntaxHelp: 'Luma Syntax & Help',
     textStyling: 'Text Styling',
     headers: 'Headers',
     lists: 'Lists',
@@ -70,17 +85,24 @@ const translations = {
     code: 'Code',
     quote: 'Quote',
     hr: 'Divider',
-    checkbox: 'Checkbox'
+    checkbox: 'Checkbox',
+    langAuto: 'Browser Default',
+    langDe: 'Deutsch',
+    langEn: 'English',
+    rowHeight: 'Table Row Height',
+    exportMd: 'As Markdown (.md)',
+    exportPdf: 'As PDF (.pdf)'
   }
 };
 
 export default function App() {
-  const [lang, setLang] = useState<Language>(() => {
-    const saved = localStorage.getItem('luma_lang') as Language;
-    if (saved) return saved;
-    const browserLang = navigator.language.split('-')[0];
-    return browserLang === 'de' ? 'de' : 'en';
+  const [langSetting, setLangSetting] = useState<LanguageSetting>(() => {
+    return (localStorage.getItem('luma_lang_setting') as LanguageSetting) || 'auto';
   });
+
+  const lang: Language = langSetting === 'auto' 
+    ? (navigator.language.startsWith('de') ? 'de' : 'en') 
+    : langSetting;
 
   const t = translations[lang];
 
@@ -96,12 +118,15 @@ export default function App() {
   });
   const [fontFamily, setFontFamily] = useState(() => localStorage.getItem('luma_font_family') || FONT_FAMILIES[0].value);
   const [fontSize, setFontSize] = useState(() => localStorage.getItem('luma_font_size') || '18px');
+  const [tableRowHeight, setTableRowHeight] = useState(() => localStorage.getItem('luma_row_height') || '10px');
+  
   const [showFlyover, setShowFlyover] = useState(true);
   const [showHelp, setShowHelp] = useState(false);
   const [showTableDialog, setShowTableDialog] = useState(false);
+  const [showExportPopover, setShowExportPopover] = useState(false);
   
   const [tableRows, setTableRows] = useState(3);
-  const [tableCols, setTableCols] = useState(3);
+  const [tableCols, setTableCols] = useState(2);
   const [tableHeader, setTableHeader] = useState(true);
 
   const editorRef = useRef<EditorRef>(null);
@@ -124,8 +149,12 @@ export default function App() {
   }, [fontSize]);
 
   useEffect(() => {
-    localStorage.setItem('luma_lang', lang);
-  }, [lang]);
+    localStorage.setItem('luma_row_height', tableRowHeight);
+  }, [tableRowHeight]);
+
+  useEffect(() => {
+    localStorage.setItem('luma_lang_setting', langSetting);
+  }, [langSetting]);
 
   const toggleSourceMode = () => {
     setIsSourceMode(!isSourceMode);
@@ -148,13 +177,30 @@ export default function App() {
     }
   };
 
-  const handleExport = () => {
+  const handleExportMd = () => {
     const blob = new Blob([markdown], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `luma_note_${lang}.md`;
+    a.download = `luma_note_${new Date().toISOString().slice(0,10)}.md`;
     a.click();
+    setShowExportPopover(false);
+  };
+
+  const handleExportPdf = () => {
+    const element = document.querySelector('.milkdown .editor') || document.querySelector('.source-view');
+    if (!element) return;
+    
+    const opt = {
+      margin: 1,
+      filename: `luma_note_${new Date().toISOString().slice(0,10)}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    
+    html2pdf().set(opt).from(element as HTMLElement).save();
+    setShowExportPopover(false);
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,11 +233,6 @@ export default function App() {
           
           <div className="divider-v" />
           
-          <select className="menu-select" value={lang} onChange={(e) => setLang(e.target.value as Language)}>
-            <option value="de">Deutsch</option>
-            <option value="en">English</option>
-          </select>
-
           <select className="menu-select" value={fontFamily} onChange={(e) => setFontFamily(e.target.value)}>
             {FONT_FAMILIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
           </select>
@@ -216,8 +257,11 @@ export default function App() {
           </button>
 
           <button className="menu-item" onClick={() => setShowHelp(true)} title={t.help}>
-            <HelpCircle size={18} />
-            <span>{t.help}</span>
+            <div className="flex items-center gap-1">
+              <Settings size={18} />
+              <span style={{ opacity: 0.5 }}>/</span>
+              <HelpCircle size={18} />
+            </div>
           </button>
         </div>
 
@@ -227,14 +271,24 @@ export default function App() {
             <span>{t.import}</span>
             <input type="file" hidden onChange={handleImport} accept=".md" />
           </label>
-          <button className="menu-item" onClick={handleExport}>
-            <FileDown size={18} />
-            <span>{t.export}</span>
-          </button>
+          
+          <div style={{ position: 'relative' }}>
+            <button className={`menu-item ${showExportPopover ? 'active' : ''}`} onClick={() => setShowExportPopover(!showExportPopover)}>
+              <FileDown size={18} />
+              <span>{t.export}</span>
+            </button>
+            
+            {showExportPopover && (
+              <div className="export-popover">
+                <button onClick={handleExportMd}><FileText size={16} /> {t.exportMd}</button>
+                <button onClick={handleExportPdf}><FileDown size={16} /> {t.exportPdf}</button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      <main style={{ flex: 1, overflowY: 'auto' }}>
+      <main style={{ flex: 1, overflowY: 'auto' }} onClick={() => setShowExportPopover(false)}>
         {isSourceMode ? (
           <textarea 
             className="source-view"
@@ -249,6 +303,7 @@ export default function App() {
             fontFamily={fontFamily}
             fontSize={fontSize}
             showFlyover={showFlyover}
+            tableRowHeight={tableRowHeight}
           />
         )}
       </main>
@@ -279,7 +334,37 @@ export default function App() {
         <div className="help-overlay" onClick={() => setShowHelp(false)}>
           <div className="help-content" onClick={e => e.stopPropagation()}>
             <button className="help-close" onClick={() => setShowHelp(false)}>✕</button>
-            <h2>{t.syntaxHelp}</h2>
+            <div className="flex items-center justify-between mb-4 border-b pb-4">
+              <h2>{t.syntaxHelp}</h2>
+              <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-1">
+                  <span style={{ fontSize: '10px', opacity: 0.6, fontWeight: 'bold' }}>{t.language}</span>
+                  <div className="flex items-center gap-2">
+                    <Globe size={14} style={{ opacity: 0.6 }} />
+                    <select className="menu-select" style={{ padding: '2px 8px' }} value={langSetting} onChange={(e) => setLangSetting(e.target.value as LanguageSetting)}>
+                      <option value="auto">{t.langAuto}</option>
+                      <option value="de">{t.langDe}</option>
+                      <option value="en">{t.langEn}</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span style={{ fontSize: '10px', opacity: 0.6, fontWeight: 'bold' }}>{t.rowHeight}</span>
+                  <div className="flex items-center gap-1">
+                    {ROW_HEIGHTS.map(h => (
+                      <button 
+                        key={h.value} 
+                        className={`menu-item ${tableRowHeight === h.value ? 'active' : ''}`}
+                        style={{ padding: '2px 8px', fontSize: '11px' }}
+                        onClick={() => setTableRowHeight(h.value)}
+                      >
+                        {h.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className="help-grid">
               <div className="help-item">
                 <h3>{t.textStyling}</h3>
@@ -313,13 +398,47 @@ export default function App() {
 
       <style>{`
         .flex { display: flex; }
+        .flex-col { flex-direction: column; }
         .flex-grow { flex-grow: 1; }
         .items-center { align-items: center; }
+        .gap-1 { gap: 4px; }
         .gap-2 { gap: 8px; }
         .gap-4 { gap: 16px; }
+        .justify-between { justify-content: space-between; }
+        .mb-4 { margin-bottom: 16px; }
+        .pb-4 { padding-bottom: 16px; }
+        .border-b { border-bottom: 1px solid var(--border); }
         .divider-v { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
         
-        .source-view { font-size: ${fontSize}; }
+        .source-view { 
+          font-size: ${fontSize};
+          width: 100%;
+          max-width: var(--editor-width);
+          margin: 0 auto;
+          display: block;
+          padding: 60px 40px;
+          border: none;
+          background: transparent;
+          color: var(--text);
+          outline: none;
+          resize: none;
+          font-family: var(--font-mono);
+          line-height: 1.7;
+        }
+
+        .export-popover {
+          position: absolute; top: calc(100% + 5px); right: 0;
+          background: var(--bg); border: 1px solid var(--border);
+          border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          display: flex; flex-direction: column; padding: 4px; z-index: 1000;
+          min-width: 180px;
+        }
+        .export-popover button {
+          display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+          background: transparent; border: none; color: var(--text);
+          cursor: pointer; border-radius: 4px; font-size: 13px; text-align: left;
+        }
+        .export-popover button:hover { background: var(--border); }
 
         /* Dialog Styles */
         .dialog-overlay {
