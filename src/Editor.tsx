@@ -1,6 +1,6 @@
 import { forwardRef, useRef, useEffect, useImperativeHandle } from 'react';
 import { Milkdown, useEditor, MilkdownProvider } from '@milkdown/react';
-import { defaultValueCtx, Editor, rootCtx, commandsCtx, remarkPluginsCtx, editorViewCtx, editorViewOptionsCtx } from '@milkdown/core';
+import { defaultValueCtx, Editor, rootCtx, commandsCtx, remarkPluginsCtx, editorViewCtx } from '@milkdown/core';
 import { commonmark } from '@milkdown/preset-commonmark';
 import { gfm } from '@milkdown/preset-gfm';
 import { history } from '@milkdown/plugin-history';
@@ -52,7 +52,8 @@ const ICONS = {
   link: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
   quote: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2h3c0 4-4 6-4 6zm14 0c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2h3c0 4-4 6-4 6z"/></svg>',
   bullet: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
-  number: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>'
+  number: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>',
+  check: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><polyline points="9 11 12 14 22 4"/></svg>'
 };
 
 const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onChange, fontFamily, fontSize, showFlyover, tableRowHeight }, ref) => {
@@ -74,22 +75,20 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
         // Ensure GFM remark plugin is loaded with autolink enabled
         ctx.update(remarkPluginsCtx, (prev) => [...prev, [remarkGfm, { autolink: true }]]);
 
-        // Add a click handler to the editor view options
-        ctx.update(editorViewOptionsCtx, (prev) => ({
-          ...prev,
-          handleClick: (_view, _pos, event) => {
-            const target = event.target as HTMLElement;
+        ctx.get(listenerCtx).mounted((ctx) => {
+          const view = ctx.get(editorViewCtx);
+          view.dom.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
             const anchor = target.closest('a');
             if (anchor) {
               const href = anchor.getAttribute('href');
               if (href) {
                 window.open(href, '_blank');
-                return true;
+                e.preventDefault();
               }
             }
-            return false;
-          }
-        }));
+          });
+        });
 
         ctx.set(tooltip.key, {
           view: (view) => {
@@ -103,6 +102,7 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
               <div class="divider"></div>
               <button class="tooltip-button" data-command="bullet-list" title="Bullet List">${ICONS.bullet}</button>
               <button class="tooltip-button" data-command="ordered-list" title="Ordered List">${ICONS.number}</button>
+              <button class="tooltip-button" data-command="task-list" title="Task List">${ICONS.check}</button>
               <button class="tooltip-button" data-command="quote" title="Quote">${ICONS.quote}</button>
               <div class="divider"></div>
               <button class="tooltip-button" data-command="link" title="Link">${ICONS.link}</button>
@@ -138,6 +138,18 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
                   case 'inline-code': commands.call(toggleInlineCodeCommand.key); break;
                   case 'bullet-list': commands.call(wrapInBulletListCommand.key); break;
                   case 'ordered-list': commands.call(wrapInOrderedListCommand.key); break;
+                  case 'task-list': {
+                    const { state } = currentView;
+                    const { selection } = state;
+                    const text = state.doc.textBetween(selection.from, selection.to, '\n');
+                    const taskListText = text.split('\n').map(line => {
+                      if (/^[-*]\s\[[ x-]\]/.test(line)) return line;
+                      return `- [ ] ${line}`;
+                    }).join('\n');
+                    
+                    commands.call(insert as any, taskListText);
+                    break;
+                  }
                   case 'quote': commands.call(wrapInBlockquoteCommand.key); break;
                   case 'link': {
                     const url = window.prompt('Enter Link URL', 'https://');
@@ -269,6 +281,30 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
         
         .milkdown li {
           margin-bottom: 0.5em !important;
+        }
+
+        /* Task List Styling */
+        .milkdown .task-list-item {
+          list-style-type: none !important;
+          position: relative;
+          padding-left: 30px !important;
+        }
+
+        .milkdown .task-list-item > input {
+          position: absolute;
+          left: 0;
+          top: 6px;
+          width: 18px;
+          height: 18px;
+          cursor: pointer;
+          margin: 0;
+          z-index: 10;
+        }
+
+        /* Fallback if it's just plain text inside the LI */
+        .milkdown .task-list-item p:first-child {
+           display: flex;
+           align-items: center;
         }
 
         .milkdown a {

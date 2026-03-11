@@ -9,7 +9,7 @@ Luma ist eine moderne, minimalistische Web-App für das Schreiben von Notizen in
 ### Haupt-Features
 *   **Live WYSIWYG Editing:** Markdown wird sofort beim Tippen gerendert (Überschriften, Listen, Tabellen etc.).
 *   **Visual/Source Toggle:** Ein nahtloser Wechsel zwischen der formatierten Ansicht und dem Markdown-Quelltext über einen dedizierten Modus-Button mit fixer Breite für maximale Layout-Stabilität.
-*   **Flyover-Toolbar:** Eine kontextuelle Formatierungsleiste mit Lucide-Icons, die bei Textmarkierung erscheint und gängige Formatierungen (Fett, Kursiv, Link, Listen etc.) per Klick erlaubt.
+*   **Flyover Toolbar:** Eine kontextuelle Formatierungsleiste mit Lucide-Icons, die bei Textmarkierung erscheint und gängige Formatierungen (Fett, Kursiv, Link, Listen etc.) per Klick erlaubt.
 *   **Grafischer Tabellen-Dialog:** Ein Popover zum komfortablen Einfügen von Tabellen mit wählbarer Zeilen-/Spaltenanzahl und Überschrift-Option.
 *   **GFM Erweiterungen:** Volle Unterstützung für GitHub Flavored Markdown inklusive Tabellen, Autolinks und Fußnoten.
 *   **Export-Optionen:** Dokumente können als Standard-Markdown-Datei (.md) oder als formatiertes PDF (.pdf) exportiert werden.
@@ -30,7 +30,7 @@ Luma basiert auf einem modernen Web-Stack:
 *   **Framework:** [React 19](https://react.dev/) mit [TypeScript](https://www.typescriptlang.org/).
 *   **Build-Tool:** [Vite](https://vitejs.dev/).
 *   **Editor-Engine:** [Milkdown](https://milkdown.dev/) (Prosemirror-basiert).
-    *   Genutzte Plugins: GFM, Commonmark, Prism (Highlighting), Tooltip (Flyover), Slash-Menu, History, Listener.
+    *   Genutzte Plugins: GFM, Commonmark, Prism (Highlighting), Tooltip (Flyover Toolbar), Slash-Menu, History, Listener.
 *   **Icons:** [Lucide React](https://lucide.dev/).
 *   **Styling:** **Vanilla CSS** mit CSS-Variablen.
 *   **PDF-Generierung:** [html2pdf.js](https://ekoopmans.github.io/html2pdf.js/).
