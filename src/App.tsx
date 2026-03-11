@@ -17,10 +17,10 @@ const FONT_FAMILIES = [
 
 const FONT_SIZES = ['14px', '16px', '18px', '20px', '22px'];
 const ROW_HEIGHTS = [
-  { label: 'S', value: '4px' },
-  { label: 'M', value: '10px' },
-  { label: 'L', value: '16px' },
-  { label: 'XL', value: '22px' },
+  { label: 'S', value: '2px' },
+  { label: 'M', value: '6px' },
+  { label: 'L', value: '12px' },
+  { label: 'XL', value: '20px' },
 ];
 
 type Language = 'de' | 'en';
@@ -118,7 +118,7 @@ export default function App() {
   });
   const [fontFamily, setFontFamily] = useState(() => localStorage.getItem('luma_font_family') || FONT_FAMILIES[0].value);
   const [fontSize, setFontSize] = useState(() => localStorage.getItem('luma_font_size') || '18px');
-  const [tableRowHeight, setTableRowHeight] = useState(() => localStorage.getItem('luma_row_height') || '10px');
+  const [tableRowHeight, setTableRowHeight] = useState(() => localStorage.getItem('luma_row_height') || '14px');
   
   const [showFlyover, setShowFlyover] = useState(true);
   const [showHelp, setShowHelp] = useState(false);

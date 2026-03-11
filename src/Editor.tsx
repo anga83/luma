@@ -273,6 +273,11 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
         /* Table row height setting */
         .milkdown td, .milkdown th {
           padding: var(--table-padding) 14px !important;
+          vertical-align: middle;
+        }
+
+        .milkdown td > p, .milkdown th > p {
+          margin: 0 !important;
         }
 
         .milkdown table {
