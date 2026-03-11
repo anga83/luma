@@ -1,6 +1,6 @@
-import { forwardRef, useRef, useEffect } from 'react';
+import { forwardRef, useRef, useEffect, useImperativeHandle } from 'react';
 import { Milkdown, useEditor, MilkdownProvider } from '@milkdown/react';
-import { defaultValueCtx, Editor, rootCtx, commandsCtx } from '@milkdown/core';
+import { defaultValueCtx, Editor, rootCtx, commandsCtx, editorViewCtx } from '@milkdown/core';
 import { commonmark } from '@milkdown/preset-commonmark';
 import { gfm } from '@milkdown/preset-gfm';
 import { history } from '@milkdown/plugin-history';
@@ -12,6 +12,7 @@ import { trailing } from '@milkdown/plugin-trailing';
 import { tooltipFactory, TooltipProvider } from '@milkdown/plugin-tooltip';
 import { slashFactory, SlashProvider } from '@milkdown/plugin-slash';
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
+import { replaceAll } from '@milkdown/utils';
 import { 
   toggleStrongCommand, 
   toggleEmphasisCommand, 
@@ -35,13 +36,14 @@ interface EditorProps {
 }
 
 export interface EditorRef {
+  updateContent: (markdown: string) => void;
   getMarkdown: () => string;
 }
 
 const tooltip = tooltipFactory('EDITOR');
 const slash = slashFactory('EDITOR');
 
-const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onChange, fontFamily, fontSize, showFlyover }, _ref) => {
+const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onChange, fontFamily, fontSize, showFlyover }, ref) => {
   const lock = useRef(false);
   const editorRef = useRef<Editor | undefined>(undefined);
 
@@ -145,6 +147,20 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
     }
   }, [loading, get]);
 
+  useImperativeHandle(ref, () => ({
+    updateContent: (markdown: string) => {
+      const editor = editorRef.current;
+      if (editor) {
+        lock.current = true;
+        editor.action((ctx) => {
+          ctx.get(commandsCtx).call(replaceAll, markdown);
+        });
+        lock.current = false;
+      }
+    },
+    getMarkdown: () => ""
+  }));
+
   return (
     <div 
       className={`milkdown-container ${showFlyover ? 'show-flyover' : 'hide-flyover'}`}
@@ -185,14 +201,12 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           display: none !important;
         }
 
-        /* Checkbox styling fix - Target GFM task list items */
         .milkdown li.task-list-item {
           list-style: none !important;
           display: flex !important;
           align-items: flex-start !important;
           gap: 10px !important;
           margin-left: -20px !important;
-          position: relative;
         }
 
         .milkdown li.task-list-item input[type="checkbox"] {
@@ -208,7 +222,6 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           flex-shrink: 0 !important;
         }
 
-        /* Ensure tables look good even without the extra plugin */
         .milkdown table {
           border-collapse: collapse;
           width: 100%;
