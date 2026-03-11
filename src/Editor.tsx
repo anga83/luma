@@ -1,6 +1,6 @@
 import { forwardRef, useRef, useEffect, useImperativeHandle } from 'react';
 import { Milkdown, useEditor, MilkdownProvider } from '@milkdown/react';
-import { defaultValueCtx, Editor, rootCtx, commandsCtx } from '@milkdown/core';
+import { defaultValueCtx, Editor, rootCtx, commandsCtx, remarkPluginsCtx, editorViewCtx } from '@milkdown/core';
 import { commonmark } from '@milkdown/preset-commonmark';
 import { gfm } from '@milkdown/preset-gfm';
 import { history } from '@milkdown/plugin-history';
@@ -12,7 +12,7 @@ import { trailing } from '@milkdown/plugin-trailing';
 import { tooltipFactory, TooltipProvider } from '@milkdown/plugin-tooltip';
 import { slashFactory, SlashProvider } from '@milkdown/plugin-slash';
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
-import { replaceAll } from '@milkdown/utils';
+import { replaceAll, insert } from '@milkdown/utils';
 import { 
   toggleStrongCommand, 
   toggleEmphasisCommand, 
@@ -23,6 +23,7 @@ import {
   updateLinkCommand
 } from '@milkdown/preset-commonmark';
 import { toggleStrikethroughCommand } from '@milkdown/preset-gfm';
+import remarkGfm from 'remark-gfm';
 
 import 'prismjs/themes/prism.css';
 
@@ -43,7 +44,6 @@ export interface EditorRef {
 const tooltip = tooltipFactory('EDITOR');
 const slash = slashFactory('EDITOR');
 
-// Minimal Lucide-like SVG Icons for the flyover bar
 const ICONS = {
   bold: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>',
   italic: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>',
@@ -52,7 +52,8 @@ const ICONS = {
   link: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
   quote: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2h3c0 4-4 6-4 6zm14 0c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 2v6c0 1.25.75 2 2 2h3c0 4-4 6-4 6z"/></svg>',
   bullet: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
-  number: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>'
+  number: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>',
+  check: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><polyline points="9 11 12 14 22 4"/></svg>'
 };
 
 const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onChange, fontFamily, fontSize, showFlyover, tableRowHeight }, ref) => {
@@ -71,9 +72,11 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           }
         });
 
-        // Setup tooltip provider with expanded commands & icons
+        // Ensure GFM remark plugin is loaded
+        ctx.update(remarkPluginsCtx, (prev) => [...prev, remarkGfm]);
+
         ctx.set(tooltip.key, {
-          view: (_view) => {
+          view: (view) => {
             const content = document.createElement('div');
             content.className = 'milkdown-tooltip';
             content.innerHTML = `
@@ -84,6 +87,7 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
               <div class="divider"></div>
               <button class="tooltip-button" data-command="bullet-list" title="Bullet List">${ICONS.bullet}</button>
               <button class="tooltip-button" data-command="ordered-list" title="Ordered List">${ICONS.number}</button>
+              <button class="tooltip-button" data-command="task-list" title="Task List">${ICONS.check}</button>
               <button class="tooltip-button" data-command="quote" title="Quote">${ICONS.quote}</button>
               <div class="divider"></div>
               <button class="tooltip-button" data-command="link" title="Link">${ICONS.link}</button>
@@ -91,11 +95,11 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
             
             const provider = new TooltipProvider({ 
               content,
-              shouldShow: (view) => {
-                const { selection, doc } = view.state;
+              shouldShow: (v) => {
+                const { selection, doc } = v.state;
                 const { from, to, empty } = selection;
                 const hasText = doc.textBetween(from, to).length > 0;
-                return !empty && hasText && view.hasFocus();
+                return !empty && hasText && v.hasFocus();
               }
             });
 
@@ -110,6 +114,8 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
 
               editor.action((ctx) => {
                 const commands = ctx.get(commandsCtx);
+                const currentView = ctx.get(editorViewCtx);
+                
                 switch(commandType) {
                   case 'strong': commands.call(toggleStrongCommand.key); break;
                   case 'emphasis': commands.call(toggleEmphasisCommand.key); break;
@@ -117,6 +123,18 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
                   case 'inline-code': commands.call(toggleInlineCodeCommand.key); break;
                   case 'bullet-list': commands.call(wrapInBulletListCommand.key); break;
                   case 'ordered-list': commands.call(wrapInOrderedListCommand.key); break;
+                  case 'task-list': {
+                    const { state } = currentView;
+                    const { selection } = state;
+                    const text = state.doc.textBetween(selection.from, selection.to, '\\n');
+                    const taskList = text.split('\\n').map(line => {
+                      if (/^[-*]\\s\\[[ x-]\\]\\s/.test(line)) return line;
+                      return `- [ ] \${line}`;
+                    }).join('\\n');
+                    
+                    commands.call(insert as any, taskList);
+                    break;
+                  }
                   case 'quote': commands.call(wrapInBlockquoteCommand.key); break;
                   case 'link': {
                     const url = window.prompt('Enter Link URL', 'https://');
@@ -174,7 +192,7 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
 
   return (
     <div 
-      className={`milkdown-container ${showFlyover ? 'show-flyover' : 'hide-flyover'}`}
+      className={`milkdown-container \${showFlyover ? 'show-flyover' : 'hide-flyover'}`}
       style={{ 
         '--font-family': fontFamily, 
         '--font-size': fontSize,
@@ -236,19 +254,12 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           color: var(--accent);
         }
 
-        .tooltip-button svg {
-          stroke: currentColor;
-        }
-
         .divider {
-          width: 1px;
-          height: 18px;
-          background: var(--border);
-          margin: 0 4px;
+          width: 1px; height: 18px; background: var(--border); margin: 0 4px;
         }
 
-        /* Checkbox styling fix */
-        .milkdown li.task-list-item {
+        /* FORCE TASK LIST VISIBILITY */
+        .milkdown .task-list-item {
           list-style: none !important;
           display: flex !important;
           align-items: flex-start !important;
@@ -257,12 +268,12 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           position: relative !important;
         }
 
-        .milkdown li.task-list-item input[type="checkbox"] {
+        .milkdown .task-list-item input[type="checkbox"] {
           appearance: checkbox !important;
           -webkit-appearance: checkbox !important;
-          width: 18px !important;
-          height: 18px !important;
-          margin-top: 4px !important;
+          width: 16px !important;
+          height: 16px !important;
+          margin-top: 6px !important;
           cursor: pointer !important;
           opacity: 1 !important;
           visibility: visible !important;
@@ -270,28 +281,20 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           z-index: 10 !important;
         }
 
-        /* Table row height setting */
+        /* Visually handle [-] even if not a node */
+        .milkdown li:has(> p:first-child:contains("[-]")) {
+          list-style: none !important;
+        }
+        
+        /* Table styling */
         .milkdown td, .milkdown th {
           padding: var(--table-padding) 14px !important;
           vertical-align: middle;
         }
-
-        .milkdown td > p, .milkdown th > p {
-          margin: 0 !important;
-        }
-
-        .milkdown table {
-          border-collapse: collapse;
-          width: 100%;
-          margin: 1.5em 0;
-        }
-        .milkdown th {
-          background: rgba(0,0,0,0.03);
-          font-weight: 600;
-        }
-        [data-theme='dark'] .milkdown th {
-          background: rgba(255,255,255,0.05);
-        }
+        .milkdown td > p, .milkdown th > p { margin: 0 !important; }
+        .milkdown table { border-collapse: collapse; width: 100%; margin: 1.5em 0; }
+        .milkdown th { background: rgba(0,0,0,0.03); font-weight: 600; }
+        [data-theme='dark'] .milkdown th { background: rgba(255,255,255,0.05); }
       `}</style>
     </div>
   );

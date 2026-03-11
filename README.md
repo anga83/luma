@@ -9,10 +9,11 @@ Luma ist eine moderne, minimalistische Web-App für das Schreiben von Notizen in
 ### Haupt-Features
 *   **Live WYSIWYG Editing:** Markdown wird sofort beim Tippen gerendert (Überschriften, Listen, Tabellen etc.).
 *   **Visual/Source Toggle:** Ein nahtloser Wechsel zwischen der formatierten Ansicht und dem Markdown-Quelltext über einen dedizierten Modus-Button mit fixer Breite für maximale Layout-Stabilität.
-*   **Flyover-Toolbar:** Eine kontextuelle Formatierungsleiste mit Lucide-Icons, die bei Textmarkierung erscheint und gängige Formatierungen (Fett, Kursiv, Link, Listen etc.) per Klick erlaubt.
+*   **Flyover-Toolbar:** Eine kontextuelle Formatierungsleiste mit Lucide-Icons, die bei Textmarkierung erscheint und gängige Formatierungen (Fett, Kursiv, Link, Listen, Task-Listen etc.) per Klick erlaubt.
 *   **Grafischer Tabellen-Dialog:** Ein Popover zum komfortablen Einfügen von Tabellen mit wählbarer Zeilen-/Spaltenanzahl und Überschrift-Option.
+*   **GFM Erweiterungen:** Volle Unterstützung für GitHub Flavored Markdown inklusive Task-Listen (Offen, Erledigt, Ausstehend `[-]`), Autolinks und Fußnoten.
 *   **Export-Optionen:** Dokumente können als Standard-Markdown-Datei (.md) oder als formatiertes PDF (.pdf) exportiert werden.
-*   **Syntax Highlighting:** Automatische Hervorhebung für Code-Blöcke in zahlreichen Programmiersprachen inklusive dezentem Sprach-Label.
+
 
 ### Quality-of-Life Features
 *   **Auto-Save & Persistence:** Alle Notizen und Einstellungen (Theme, Schriftart, Sprache, Tabellen-Dichte) werden automatisch im Local Storage gespeichert.
