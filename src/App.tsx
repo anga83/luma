@@ -28,14 +28,14 @@ type LanguageSetting = 'auto' | 'de' | 'en';
 
 const translations = {
   de: {
-    welcome: '# Willkommen bei Luma\n\nSchreibe deine Notizen in Markdown. Die Formatierung passiert **live**!\n\n- Moderne Tabellen\n- Markiere diesen Text für die Flyover-Leiste\n- Fokus auf das Wesentliche\n\n| Feature | Beschreibung |\n| :--- | :--- |\n| WYSIWYG | Live-Vorschau beim Tippen |\n| Export | Markdown & PDF Export |\n| Fokus | Abgelenkt-freies Schreiben |\n\n```javascript\nconsole.log("Syntax Highlighting inklusive!");\n```',
+    welcome: '# Willkommen bei Luma\n\nSchreibe deine Notizen in Markdown. Die Formatierung passiert **live**!\n\n- Moderne Tabellen\n- Markiere diesen Text für die Flyover Toolbar\n- Fokus auf das Wesentliche\n\n| Feature | Beschreibung |\n| :--- | :--- |\n| WYSIWYG | Live-Vorschau beim Tippen |\n| Export | Markdown & PDF Export |\n| Fokus | Abgelenkt-freies Schreiben |\n\n```javascript\nconsole.log("Syntax Highlighting inklusive!");\n```',
     import: 'Importieren',
     export: 'Exportieren',
     help: 'Hilfe & Einstellungen',
     table: 'Tabelle',
     language: 'Sprache',
     theme: 'Theme',
-    flyover: 'Formatierungs-Leiste bei Markierung',
+    flyover: 'Flyover Toolbar bei Markierung',
     rows: 'Zeilen',
     cols: 'Spalten',
     headerRow: 'Überschrift-Zeile',
@@ -63,14 +63,14 @@ const translations = {
     footnote: 'Fußnote'
   },
   en: {
-    welcome: '# Welcome to Luma\n\nWrite your notes in Markdown. Formatting happens **live**!\n\n- Modern tables\n- Highlight this text for the flyover toolbar\n- Focus on what matters\n\n| Feature | Description |\n| :--- | :--- |\n| WYSIWYG | Real-time preview as you type |\n| Export | Markdown & PDF export |\n| Focus | Distraction-free writing |\n\n```javascript\nconsole.log("Syntax highlighting included!");\n```',
+    welcome: '# Welcome to Luma\n\nWrite your notes in Markdown. Formatting happens **live**!\n\n- Modern tables\n- Highlight this text for the Flyover Toolbar\n- Focus on what matters\n\n| Feature | Description |\n| :--- | :--- |\n| WYSIWYG | Real-time preview as you type |\n| Export | Markdown & PDF export |\n| Focus | Distraction-free writing |\n\n```javascript\nconsole.log("Syntax highlighting included!");\n```',
     import: 'Import',
     export: 'Export',
     help: 'Help & Settings',
     table: 'Table',
     language: 'Language',
     theme: 'Theme',
-    flyover: 'Format toolbar on selection',
+    flyover: 'Flyover Toolbar on selection',
     rows: 'Rows',
     cols: 'Columns',
     headerRow: 'Header Row',

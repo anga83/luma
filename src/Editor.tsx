@@ -1,6 +1,6 @@
 import { forwardRef, useRef, useEffect, useImperativeHandle } from 'react';
 import { Milkdown, useEditor, MilkdownProvider } from '@milkdown/react';
-import { defaultValueCtx, Editor, rootCtx, commandsCtx, remarkPluginsCtx, editorViewCtx } from '@milkdown/core';
+import { defaultValueCtx, Editor, rootCtx, commandsCtx, remarkPluginsCtx, editorViewCtx, editorViewOptionsCtx } from '@milkdown/core';
 import { commonmark } from '@milkdown/preset-commonmark';
 import { gfm } from '@milkdown/preset-gfm';
 import { history } from '@milkdown/plugin-history';
@@ -71,8 +71,25 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           }
         });
 
-        // Ensure GFM remark plugin is loaded
-        ctx.update(remarkPluginsCtx, (prev) => [...prev, remarkGfm]);
+        // Ensure GFM remark plugin is loaded with autolink enabled
+        ctx.update(remarkPluginsCtx, (prev) => [...prev, [remarkGfm, { autolink: true }]]);
+
+        // Add a click handler to the editor view options
+        ctx.update(editorViewOptionsCtx, (prev) => ({
+          ...prev,
+          handleClick: (_view, _pos, event) => {
+            const target = event.target as HTMLElement;
+            const anchor = target.closest('a');
+            if (anchor) {
+              const href = anchor.getAttribute('href');
+              if (href) {
+                window.open(href, '_blank');
+                return true;
+              }
+            }
+            return false;
+          }
+        }));
 
         ctx.set(tooltip.key, {
           view: (view) => {
@@ -252,6 +269,12 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
         
         .milkdown li {
           margin-bottom: 0.5em !important;
+        }
+
+        .milkdown a {
+          color: var(--accent) !important;
+          text-decoration: underline !important;
+          cursor: pointer !important;
         }
 
         /* Table styling */
