@@ -126,11 +126,11 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
                   case 'task-list': {
                     const { state } = currentView;
                     const { selection } = state;
-                    const text = state.doc.textBetween(selection.from, selection.to, '\\n');
-                    const taskList = text.split('\\n').map(line => {
-                      if (/^[-*]\\s\\[[ x-]\\]\\s/.test(line)) return line;
-                      return `- [ ] \${line}`;
-                    }).join('\\n');
+                    const text = state.doc.textBetween(selection.from, selection.to, '\n');
+                    const taskList = text.split('\n').map(line => {
+                      if (/^[-*]\s\[[ x-]\]/.test(line)) return line;
+                      return `- [ ] ${line}`;
+                    }).join('\n');
                     
                     commands.call(insert as any, taskList);
                     break;
@@ -192,7 +192,7 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
 
   return (
     <div 
-      className={`milkdown-container \${showFlyover ? 'show-flyover' : 'hide-flyover'}`}
+      className={`milkdown-container ${showFlyover ? 'show-flyover' : 'hide-flyover'}`}
       style={{ 
         '--font-family': fontFamily, 
         '--font-size': fontSize,
@@ -258,34 +258,95 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
           width: 1px; height: 18px; background: var(--border); margin: 0 4px;
         }
 
-        /* FORCE TASK LIST VISIBILITY */
-        .milkdown .task-list-item {
+        /* BRUTE FORCE CHECKBOX RENDERING */
+        .milkdown ul {
+          padding-left: 20px !important;
+        }
+        
+        .milkdown li {
           list-style: none !important;
-          display: flex !important;
-          align-items: flex-start !important;
-          gap: 10px !important;
-          margin-left: -20px !important;
           position: relative !important;
+          padding-left: 28px !important;
+          margin-bottom: 6px !important;
         }
 
-        .milkdown .task-list-item input[type="checkbox"] {
+        /* Default bullet for non-checkbox items */
+        .milkdown li:not(.task-list-item):not([data-item-type="task"])::before {
+          content: "•";
+          position: absolute;
+          left: 8px;
+          color: var(--text);
+          opacity: 0.5;
+        }
+
+        /* Task list specific styling */
+        .milkdown .task-list-item, .milkdown li[data-item-type="task"] {
+          padding-left: 28px !important;
+        }
+
+        .milkdown .task-list-item input[type="checkbox"],
+        .milkdown li[data-item-type="task"] input[type="checkbox"] {
+          position: absolute !important;
+          left: 0 !important;
+          top: 4px !important;
+          margin: 0 !important;
+          width: 18px !important;
+          height: 18px !important;
           appearance: checkbox !important;
           -webkit-appearance: checkbox !important;
-          width: 16px !important;
-          height: 16px !important;
-          margin-top: 6px !important;
           cursor: pointer !important;
           opacity: 1 !important;
           visibility: visible !important;
-          flex-shrink: 0 !important;
           z-index: 10 !important;
         }
 
-        /* Visually handle [-] even if not a node */
-        .milkdown li:has(> p:first-child:contains("[-]")) {
+        /* Manual Checkbox look if node fails to render as input */
+        .milkdown li:contains("[ ] "), 
+        .milkdown li:contains("[x] "),
+        .milkdown li:contains("[-] ") {
           list-style: none !important;
         }
-        
+
+        .milkdown li:contains("[ ] ")::before,
+        .milkdown li:contains("[x] ")::before,
+        .milkdown li:contains("[-] ")::before {
+          content: "" !important;
+          position: absolute;
+          left: 0;
+          top: 4px;
+          width: 18px;
+          height: 18px;
+          border: 1px solid var(--border);
+          border-radius: 3px;
+          background: var(--bg);
+        }
+
+        .milkdown li:contains("[x] ")::before {
+          background: var(--accent) !important;
+          border-color: var(--accent) !important;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E") !important;
+          background-size: 14px !important;
+          background-repeat: no-repeat !important;
+          background-position: center !important;
+        }
+
+        .milkdown li:contains("[-] ")::before {
+          background: #ff9500 !important;
+          border-color: #ff9500 !important;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='5' y1='12' x2='19' y2='12'%3E%3C/line%3E%3C/svg%3E") !important;
+          background-size: 14px !important;
+          background-repeat: no-repeat !important;
+          background-position: center !important;
+        }
+
+        /* Remove literal text markers if CSS fallback is used */
+        .milkdown li:contains("[ ] ") > p:first-child,
+        .milkdown li:contains("[x] ") > p:first-child,
+        .milkdown li:contains("[-] ") > p:first-child {
+          text-indent: -3ch;
+          display: inline-block;
+        }
+
         /* Table styling */
         .milkdown td, .milkdown th {
           padding: var(--table-padding) 14px !important;
