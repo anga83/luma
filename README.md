@@ -1,51 +1,52 @@
 # Luma – Minimalist WYSIWYG Markdown Editor
 
+![Luma Screenshot](screenshot.png)
+
 Luma ist eine moderne, minimalistische Web-App für das Schreiben von Notizen in Markdown, stark inspiriert von Editoren wie Typora. Das Kernkonzept ist "Live Formatting": Der Nutzer schreibt reines Markdown, das sofort während des Tippens visuell formatiert wird, ohne dass ein geteilter Bildschirm nötig ist. Luma kombiniert die Einfachheit von Text-Dateien mit dem Komfort einer Textverarbeitung.
 
 ## Features
 
 ### Haupt-Features
 *   **Live WYSIWYG Editing:** Markdown wird sofort beim Tippen gerendert (Überschriften, Listen, Tabellen etc.).
-*   **Visual/Source Toggle:** Ein nahtloser Wechsel zwischen der formatierten Ansicht und dem Markdown-Quelltext über einen dedizierten Modus-Button.
-*   **Flyover-Toolbar:** Eine kontextuelle Formatierungsleiste, die bei Textmarkierung erscheint und gängige Formatierungen (Fett, Kursiv, Link, Listen etc.) per Klick erlaubt.
-*   **Erweiterte Tabellen-Unterstützung:** Ein grafischer Dialog zum Einfügen von Tabellen mit wählbaren Zeilen/Spalten und Überschrift-Option.
-*   **PDF- & Markdown-Export:** Dokumente können als formatierte PDF oder als Standard-Markdown-Datei exportiert werden.
-*   **Syntax Highlighting:** Automatische Hervorhebung für Code-Blöcke in zahlreichen Programmiersprachen inklusive Sprach-Label in der Visual-Ansicht.
+*   **Visual/Source Toggle:** Ein nahtloser Wechsel zwischen der formatierten Ansicht und dem Markdown-Quelltext über einen dedizierten Modus-Button mit fixer Breite für maximale Layout-Stabilität.
+*   **Flyover-Toolbar:** Eine kontextuelle Formatierungsleiste mit Lucide-Icons, die bei Textmarkierung erscheint und gängige Formatierungen (Fett, Kursiv, Link, Listen etc.) per Klick erlaubt.
+*   **Grafischer Tabellen-Dialog:** Ein Popover zum komfortablen Einfügen von Tabellen mit wählbarer Zeilen-/Spaltenanzahl und Überschrift-Option.
+*   **Export-Optionen:** Dokumente können als Standard-Markdown-Datei (.md) oder als formatiertes PDF (.pdf) exportiert werden.
+*   **Syntax Highlighting:** Automatische Hervorhebung für Code-Blöcke in zahlreichen Programmiersprachen inklusive dezentem Sprach-Label.
 
 ### Quality-of-Life Features
-*   **Persistence:** Alle Notizen und Einstellungen (Theme, Schriftart, Sprache) werden automatisch im Local Storage gespeichert.
-*   **Internationalisierung:** Komplette Unterstützung für Deutsch und Englisch, inklusive automatischer Erkennung des Browser-Standards.
-*   **Anpassbare Typografie:** Auswahl zwischen verschiedenen Schrift-Stilen (Sans, Serif, Elegant, Mono) und Größen.
-*   **Dark Mode:** Ein integriertes dunkles Theme für angenehmes Schreiben bei Nacht.
-*   **Hilfe-Popover:** Ein integriertes Cheat-Sheet für die Markdown-Syntax und zentrale Einstellungen.
-*   **Einstellbare Tabellen-Dichte:** Die Zeilenhöhe von Tabellen lässt sich in vier Stufen (S, M, L, XL) anpassen.
+*   **Auto-Save & Persistence:** Alle Notizen und Einstellungen (Theme, Schriftart, Sprache, Tabellen-Dichte) werden automatisch im Local Storage gespeichert.
+*   **Mehrsprachigkeit:** Volle Unterstützung für Deutsch und Englisch, inklusive automatischer Erkennung des Browser-Standards und manueller Umschaltmöglichkeit.
+*   **Anpassbare Typografie:** Auswahl zwischen verschiedenen Schrift-Stilen (Sans, Serif, Elegant, Mono) und Größen direkt in der Menüleiste.
+*   **Dark Mode:** Ein integriertes dunkles Theme für angenehmes Schreiben.
+*   **Hilfe & Einstellungen:** Ein kombiniertes Popover für Markdown-Syntax-Hilfe und Spracheinstellungen.
+*   **Variable Tabellen-Dichte:** Die Zeilenhöhe von Tabellen lässt sich feinstufig (S, M, L, XL) anpassen, wobei "S" eine extrem kompakte Darstellung bietet.
 *   **Interaktive Checkboxen:** Task-Listen (`[ ]` / `[x]`) werden als echte, nutzbare Checkboxen gerendert.
 
 ## Technischer Aufbau
 
 Luma basiert auf einem modernen Web-Stack:
 
-*   **Framework:** [React 19](https://react.dev/) mit [TypeScript](https://www.typescriptlang.org/) für eine robuste, komponentenbasierte Architektur.
-*   **Build-Tool:** [Vite](https://vitejs.dev/) für extrem schnelle Entwicklungszyklen.
-*   **Editor-Engine:** [Milkdown](https://milkdown.dev/) – ein erweiterbarer Markdown-Editor auf Basis von Prosemirror.
-    *   Genutzte Plugins: GFM, Commonmark, Prism (Highlighting), Tooltip, Slash-Menu, History, Listener.
-*   **Icons:** [Lucide React](https://lucide.dev/) für ein konsistentes und klares UI-Design.
-*   **Styling:** **Vanilla CSS** mit CSS-Variablen für Themes und reaktionsschnelles Design.
-*   **PDF-Generierung:** [html2pdf.js](https://ekoopmans.github.io/html2pdf.js/) zur Umwandlung des gerenderten DOMs in PDF-Dokumente.
+*   **Framework:** [React 19](https://react.dev/) mit [TypeScript](https://www.typescriptlang.org/).
+*   **Build-Tool:** [Vite](https://vitejs.dev/).
+*   **Editor-Engine:** [Milkdown](https://milkdown.dev/) (Prosemirror-basiert).
+    *   Genutzte Plugins: GFM, Commonmark, Prism (Highlighting), Tooltip (Flyover), Slash-Menu, History, Listener.
+*   **Icons:** [Lucide React](https://lucide.dev/).
+*   **Styling:** **Vanilla CSS** mit CSS-Variablen.
+*   **PDF-Generierung:** [html2pdf.js](https://ekoopmans.github.io/html2pdf.js/).
 
 ## LLM-Handoff & Projekt-Kontext
 
-Für zukünftige Entwicklungen oder Erweiterungen durch ein LLM sind hier wichtige interne Details und bisherige Anforderungen dokumentiert:
+Für zukünftige Entwicklungen oder Erweiterungen durch ein LLM sind hier wichtige interne Details dokumentiert:
 
-*   **Milkdown v7 Integration:** Die App nutzt Milkdown v7. Befehle müssen über den `commandsCtx` innerhalb einer `editor.action` aufgerufen werden (z. B. `ctx.get(commandsCtx).call(command.key)`). 
-*   **Tabellen-Handling:** Das offizielle `@milkdown/plugin-table` wurde aufgrund von Kompatibilitätsproblemen in der aktuellen Umgebung entfernt. Tabellen werden stattdessen als Markdown-Strings generiert und über den `replaceAll`-Macro-Befehl in den Editor injiziert. Die `updateContent`-Methode im `EditorRef` sorgt für die Synchronisation.
-*   **Checkboxen (Task Lists):** Diese werden über GFM-Presets erkannt, benötigen aber die spezifischen CSS-Overrides in `Editor.tsx` (Targeting von `li.task-list-item input`), um korrekt und anklickbar gerendert zu werden.
-*   **Flyover Toolbar:** Implementiert via `TooltipProvider`. Die `shouldShow`-Logik wurde manuell verschärft, um "Geister-Tooltips" auf leeren Zeilen zu verhindern (Prüfung auf `selection.empty`, `doc.textBetween` und `view.hasFocus`).
-*   **UI-Stabilität:** Der "Visual/Source"-Button hat eine fixierte Breite von `100px`, um Layout-Sprünge beim Textwechsel zu vermeiden.
-*   **Zentrales State-Management:** Der Inhalt (`markdown`) wird in `App.tsx` gehalten. Da Milkdown ein unkontrollierter Editor ist, erfolgt die Synchronisation via `listenerCtx` (Markdown-Update) und das manuelle `updateContent` (für externe Änderungen wie Tabellen-Injektion).
-*   **Zweisprachigkeit:** Die Lokalisierung ist über ein `translations`-Objekt in `App.tsx` gelöst. Der Standardwert `'auto'` triggert die Erkennung der Browsersprache.
+*   **Editor-Synchronisation:** Die App nutzt einen `editorKey` in `App.tsx`, um den Editor bei externen Inhaltsänderungen (wie dem Einfügen von Tabellen) neu zu laden ("Hidden Reload"). Dies umgeht Synchronisationsprobleme bei unkontrollierten Komponenten.
+*   **Milkdown v7 Integration:** Befehle werden über `commandsCtx.call()` innerhalb von `editor.action` ausgeführt.
+*   **Tabellen-Handling:** Da das offizielle Table-Plugin in dieser Umgebung inkompatibel war, werden Tabellen als Markdown-Strings generiert und in den State injiziert. Die Zell-Padding-Werte werden über die CSS-Variable `--table-padding` gesteuert.
+*   **Checkboxen (Task Lists):** Spezifische CSS-Overrides in `Editor.tsx` sorgen dafür, dass die GFM-Checkboxen sichtbar und korrekt positioniert sind.
+*   **Flyover Toolbar:** Der `TooltipProvider` prüft aktiv auf Textinhalt (`doc.textBetween`), um nicht auf leeren Zeilen zu erscheinen. Die Icons sind als Inline-SVGs in `Editor.tsx` definiert.
+*   **Lokalisierung:** Zentral verwaltet über das `translations`-Objekt. Der `langSetting`-Status unterstützt `auto`, `de` und `en`.
 
 ## Erstellt mit
 *   **Tool:** Gemini CLI
-*   **Agent/Model:** Gemini 2.0 Flash
+*   **Agent/Model:** Gemini 3
 *   **Datum:** März 2026
