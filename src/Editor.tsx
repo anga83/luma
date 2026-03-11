@@ -73,7 +73,7 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
         });
 
         // Ensure GFM remark plugin is loaded with autolink enabled
-        ctx.update(remarkPluginsCtx, (prev) => [...prev, [remarkGfm, { autolink: true }]]);
+        ctx.update(remarkPluginsCtx, (prev) => [...prev, [remarkGfm, { autolink: true }] as any]);
 
         ctx.get(listenerCtx).mounted((ctx) => {
           const view = ctx.get(editorViewCtx);
@@ -91,7 +91,7 @@ const EditorComponent = forwardRef<EditorRef, EditorProps>(({ initialValue, onCh
         });
 
         ctx.set(tooltip.key, {
-          view: (view) => {
+          view: (_view) => {
             const content = document.createElement('div');
             content.className = 'milkdown-tooltip';
             content.innerHTML = `
