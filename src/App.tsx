@@ -118,7 +118,7 @@ export default function App() {
   });
   const [fontFamily, setFontFamily] = useState(() => localStorage.getItem('luma_font_family') || FONT_FAMILIES[0].value);
   const [fontSize, setFontSize] = useState(() => localStorage.getItem('luma_font_size') || '18px');
-  const [tableRowHeight, setTableRowHeight] = useState(() => localStorage.getItem('luma_row_height') || '14px');
+  const [tableRowHeight, setTableRowHeight] = useState(() => localStorage.getItem('luma_row_height') || '6px');
   
   const [showFlyover, setShowFlyover] = useState(true);
   const [showHelp, setShowHelp] = useState(false);
@@ -128,6 +128,9 @@ export default function App() {
   const [tableRows, setTableRows] = useState(3);
   const [tableCols, setTableCols] = useState(2);
   const [tableHeader, setTableHeader] = useState(true);
+  
+  // Key to force-reload the editor when content is externally updated (e.g. table insert)
+  const [editorKey, setEditorKey] = useState(0);
 
   const editorRef = useRef<EditorRef>(null);
 
@@ -160,9 +163,12 @@ export default function App() {
     setIsSourceMode(!isSourceMode);
   };
 
-  const handleInsertTable = () => {
+  const handleInsertTable = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (tableRows > 0 && tableCols > 0) {
-      let tableMd = '\n| ' + Array(tableCols).fill('Header').join(' | ') + ' |\n';
+      let tableMd = '\n| ' + Array(tableCols).fill(tableHeader ? 'Header' : 'Cell').join(' | ') + ' |\n';
       tableMd += '| ' + Array(tableCols).fill('---').join(' | ') + ' |\n';
       for (let i = 0; i < tableRows; i++) {
         tableMd += '| ' + Array(tableCols).fill('Cell').join(' | ') + ' |\n';
@@ -170,9 +176,9 @@ export default function App() {
       
       const newMarkdown = markdown + '\n' + tableMd;
       setMarkdown(newMarkdown);
-      if (!isSourceMode && editorRef.current) {
-        editorRef.current.updateContent(newMarkdown);
-      }
+      
+      // Force a hidden reload of the editor to show the new content
+      setEditorKey(prev => prev + 1);
       setShowTableDialog(false);
     }
   };
@@ -210,9 +216,7 @@ export default function App() {
       reader.onload = (ev) => {
         const text = ev.target?.result as string;
         setMarkdown(text);
-        if (!isSourceMode && editorRef.current) {
-          editorRef.current.updateContent(text);
-        }
+        setEditorKey(prev => prev + 1);
       };
       reader.readAsText(file);
     }
@@ -297,6 +301,7 @@ export default function App() {
           />
         ) : (
           <MarkdownEditor 
+            key={editorKey}
             ref={editorRef}
             initialValue={markdown}
             onChange={setMarkdown}
